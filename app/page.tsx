@@ -11,7 +11,7 @@ export default function Home() {
   const [err, setErr] = useState<string | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
-  async function ask(e: React.FormEvent) {
+  async function askStream(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setAnswer('');
@@ -20,7 +20,7 @@ export default function Home() {
 
     try {
       setLoading(true);
-      // stream tokens from the API
+
       const resp = await fetch(`${API_BASE}/api/chat?stream=1&limit=5`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,27 +39,35 @@ export default function Home() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
         buffer += decoder.decode(value, { stream: true });
 
-        // SSE frames are separated by blank lines
         const frames = buffer.split('\n\n');
-        // keep last partial frame in buffer
         buffer = frames.pop() || '';
 
-        for (const f of frames) {
-          // ignore comments / event: lines, we only care about "data: ..."
-          const line = f.split('\n').find(l => l.startsWith('data: '));
-          if (!line) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
+        for (const frame of frames) {
+          const lines = frame.split('\n');
+          const eventLine = lines.find(l => l.startsWith('event: '));
+          const eventName = eventLine ? eventLine.slice(7).trim() : 'message';
+          const dataLines = lines.filter(l => l.startsWith('data: ')).map(l => l.slice(6));
+          const dataPayload = dataLines.join('\n').trim();
+
+          if (!dataPayload || dataPayload === '[DONE]') continue;
 
           try {
-            const chunk = JSON.parse(jsonStr);
-            const token = chunk?.choices?.[0]?.delta?.content ?? '';
-            if (token) setAnswer(prev => prev + token);
+            const json = JSON.parse(dataPayload);
+            if (eventName === 'error' || json?.error) {
+              const message = json?.error ?? 'Unknown streaming error';
+              setErr(message);
+              continue;
+            }
+            const token = json?.choices?.[0]?.delta?.content ?? '';
+            if (typeof token === 'string' && token.length > 0) {
+              setAnswer(prev => prev + token);
+              continue;
+            }
           } catch {
-            // non-JSON payload (e.g. our error event). Show raw
-            if (jsonStr) setAnswer(prev => prev + jsonStr);
+            setAnswer(prev => prev + dataPayload);
           }
         }
       }
@@ -67,7 +75,31 @@ export default function Home() {
       setErr(e?.message || 'Error al llamar a la API');
     } finally {
       setLoading(false);
-      if (taRef.current) taRef.current.focus();
+      taRef.current?.focus();
+    }
+  }
+
+  async function askNonStream() {
+    setErr(null);
+    setAnswer('');
+    const q = question.trim();
+    if (!q) return;
+
+    try {
+      setLoading(true);
+      const resp = await fetch(`${API_BASE}/api/chat?limit=5`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: q }] }),
+      });
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(JSON.stringify(json));
+      const a = (json && json.answer) || '';
+      setAnswer(a || '(sin respuesta JSON)');
+    } catch (e: any) {
+      setErr(e?.message || 'Error en llamada no-stream');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -90,7 +122,7 @@ export default function Home() {
         API base: <code>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code>
       </p>
 
-      <form onSubmit={ask} style={{ marginTop: 16 }}>
+      <form onSubmit={askStream} style={{ marginTop: 16 }}>
         <label htmlFor="q" style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>
           Pregunta
         </label>
@@ -103,9 +135,12 @@ export default function Home() {
           placeholder="¿Qué dice el artículo 123 del Código Procesal en España?"
           style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', resize: 'vertical' }}
         />
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
           <button type="submit" disabled={loading} style={{ padding: '10px 14px', borderRadius: 8, border: 0, background: '#111', color: '#fff' }}>
-            {loading ? 'Consultando…' : 'Preguntar'}
+            {loading ? 'Consultando…' : 'Preguntar (stream)'}
+          </button>
+          <button type="button" onClick={askNonStream} disabled={loading} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #ddd', background: '#fff' }}>
+            Preguntar (no-stream)
           </button>
           <button type="button" onClick={pingApi} disabled={loading} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #ddd', background: '#fff' }}>
             Ping API /api/chat (GET)
