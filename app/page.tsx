@@ -1,45 +1,44 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
-export default function Page() {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '';
-  const [ping, setPing] = useState<string>('');
-  const [error, setError] = useState<string>('');
+export default function Home() {
+  const [ping, setPing] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
-  const pingApi = async () => {
-    setError('');
-    setPing('…');
+  async function pingApi() {
+    setPing("");
+    setError("");
     try {
-      const r = await fetch(`${apiBase}/api/chat`, { method: 'GET' });
-      const txt = await r.text();
-      setPing(`${r.status} ${txt}`);
+      const base =
+        process.env.NEXT_PUBLIC_API_BASE ?? "https://api.olivogalarza.com";
+      const res = await fetch(`${base}/api/chat`, { method: "GET" });
+      const text = await res.text();
+      setPing(text);
     } catch (e: any) {
-      setError(String(e?.message || e));
-      setPing('');
+      setError(String(e?.message ?? e));
     }
-  };
+  }
 
   return (
-    <main style={{ maxWidth: 720, margin: '2rem auto', fontFamily: 'system-ui' }}>
+    <main style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
       <h1>KB Chat (UI)</h1>
+      <p>Frontend is up. Click to ping the API health check.</p>
 
-      <p>
-        <strong>API base (NEXT_PUBLIC_API_BASE):</strong>{' '}
-        {apiBase ? <code>{apiBase}</code> : <em>(missing)</em>}
-      </p>
-
-      <button onClick={pingApi} style={{ padding: '0.6rem 1rem' }}>
+      <button
+        onClick={pingApi}
+        style={{ padding: "0.6rem 1rem", cursor: "pointer" }}
+      >
         Ping API /api/chat (GET)
       </button>
 
       {ping && (
-        <p style={{ marginTop: '1rem' }}>
+        <p style={{ marginTop: "1rem" }}>
           <strong>Ping result:</strong> {ping}
         </p>
       )}
       {error && (
-        <p style={{ marginTop: '1rem', color: 'crimson' }}>
+        <p style={{ marginTop: "1rem", color: "crimson" }}>
           <strong>Error:</strong> {error}
         </p>
       )}
