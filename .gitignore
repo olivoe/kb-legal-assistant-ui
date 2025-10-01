@@ -16,3 +16,9 @@ yarn-error.log*
 # OS/editor
 .DS_Store
 .vscode/
+.vercel
+
+!public/embeddings.json
+!public/kb-text/
+!public/kb-text/**
+*.tsbuildinfo
