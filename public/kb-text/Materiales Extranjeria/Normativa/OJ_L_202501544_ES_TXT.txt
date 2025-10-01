@@ -1,0 +1,203 @@
+            Diario Oficial                                                                                                                               ES
+            de la Unión Europea                                                                                                                     Serie L
+
+                                                                    2025/1544                                                                   31.7.2025
+
+                                     DECISI�N DE EJECUCI�N (UE) 2025/1544 DE LA COMISI�N
+                                                               de 30 de julio de 2025
+              por la que se determina la fecha en que entrará en funcionamiento el Sistema de Entradas y Salidas de
+                     conformidad con el Reglamento (UE) 2017/2226 del Parlamento Europeo y del Consejo
+
+                                                         (Texto pertinente a efectos del EEE)
+
+      LA COMISI�N EUROPEA,
+      Visto el Tratado de Funcionamiento de la Unión Europea,
+      Visto el Reglamento (UE) 2017/2226 del Parlamento Europeo y del Consejo, de 30 de noviembre de 2017, por el que se
+      establece un Sistema de Entradas y Salidas (SES) para registrar los datos de entrada y salida y de denegación de entrada
+      relativos a nacionales de terceros países que crucen las fronteras exteriores de los Estados miembros, se determinan las
+      condiciones de acceso al SES con fines policiales y se modifican el Convenio de aplicación del Acuerdo de Schengen y los
+      Reglamentos (CE) n.o 767/2008 y (UE) n.o 1077/2011 (1), y en particular su artículo 66, apartado 1,
+      Considerando lo siguiente:
+      (1)    El Reglamento (UE) 2017/2226 estableció el Sistema de Entradas y Salidas (SES). El SES es un sistema que registra
+             electrónicamente la hora y el lugar de entrada y salida de los nacionales de terceros países admitidos para una
+             estancia de corta duración en el territorio de los Estados miembros y que calcula la duración de su estancia
+             autorizada.
+      (2)    Desde la entrada en vigor del Reglamento (UE) 2017/2226, la Comisión, los Estados miembros y la Agencia de la
+             Unión Europea para la Gestión Operativa de Sistemas Informáticos de Gran Magnitud en el Espacio de Libertad,
+             Seguridad y Justicia (eu-LISA) han completado las medidas legales y técnicas necesarias para recopilar y transmitir
+             datos al SES.
+      (3)    El artículo 66, apartado 1, del Reglamento (UE) 2017/2226 establece las condiciones que deben cumplirse antes de
+             que el SES entre en funcionamiento. Todas estas condiciones se han cumplido. Se han adoptado los actos delegados
+             y de ejecución necesarios para el funcionamiento del SES (2); eu-LISA ha declarado la realización satisfactoria de un
+             ensayo íntegro del SES, que se ha llevado a cabo en cooperación con las autoridades de los Estados miembros; los
+
+
+      (1) DO L 327 de 9.12.2017, p. 20, ELI: http://data.europa.eu/eli/reg/2017/2226/oj.
+      (2) Decisión de Ejecución (UE) 2018/1547 de la Comisión, de 15 de octubre de 2018, por la que se establecen las especificaciones de la
+          conexión de los puntos de acceso central al Sistema de Entradas y Salidas (SES) y de una solución técnica para facilitar la recopilación
+          de datos por parte de los Estados miembros a fin de generar estadísticas sobre el acceso a los datos del SES con fines policiales
+          (DO L 259 de 16.10.2018, p. 35, ELI: http://data.europa.eu/eli/dec_impl/2018/1547/oj); Decisión de Ejecución (UE) 2018/1548 de la
+          Comisión, de 15 de octubre de 2018, por la que se establecen medidas para la elaboración de la lista de personas identificadas como
+          personas que han sobrepasado el período de estancia autorizada en el Sistema de Entradas y Salidas (SES) y el procedimiento para
+          ponerla a disposición de los Estados miembros (DO L 259 de 16.10.2018, p. 39, ELI: http://data.europa.eu/eli/dec_impl/2018/1548/
+          oj); Decisión de Ejecución (UE) 2019/329 de la Comisión, de 25 de febrero de 2019, por la que se establecen las especificaciones para
+          la calidad, resolución y uso de impresiones dactilares e imágenes faciales, para la verificación e identificación biométrica, en el Sistema
+          de Entradas y Salidas (SES) (DO L 57 de 26.2.2019, p. 18, ELI: http://data.europa.eu/eli/dec_impl/2019/329/oj); Decisión de Ejecución
+          (UE) 2019/326 de la Comisión, de 25 de febrero de 2019, por la que se establecen medidas relativas a la introducción de datos en el
+          Sistema de Entradas y Salidas (SES) (DO L 57 de 26.2.2019, p. 5, ELI: http://data.europa.eu/eli/dec_impl/2019/326/oj); Decisión de
+          Ejecución (UE) 2019/327 de la Comisión, de 25 de febrero de 2019, por la que se establecen medidas relativas al acceso a los datos
+          incluidos en el Sistema de Entradas y Salidas (SES) (DO L 57 de 26.2.2019, p. 10, ELI: http://data.europa.eu/eli/dec_impl/2019/327/
+          oj); Decisión de Ejecución (UE) 2019/328 de la Comisión, de 25 de febrero de 2019, por la que se establecen medidas relativas a la
+          conservación de las inscripciones del Sistema de Entradas y Salidas (SES) y al acceso a las mismas (DO L 57 de 26.2.2019, p. 14, ELI:
+          http://data.europa.eu/eli/dec_impl/2019/328/oj); Decisión de Ejecución de la Comisión, de 25.2.2019, por la que se establecen las
+          especificaciones y condiciones del repositorio de datos del Sistema de Entradas y Salidas (SES) [C(2019) 1240]; Decisión de Ejecución
+          de la Comisión, de 25.2.2019, por la que se establecen medidas para el establecimiento y el diseño de alto nivel de la interoperabilidad
+          entre el Sistema de Entradas y Salidas (SES) y el Sistema de Información de Visados (VIS) [C(2019) 1270]; Decisión de Ejecución de la
+          Comisión, de 25.2.2019, por la que se establecen requisitos de rendimiento del Sistema de Entradas y Salidas (SES) [C(2019) 1260];
+          Decisión de Ejecución de la Comisión, de 7.5.2021, por la que se establecen disposiciones de aplicación del Reglamento
+          (UE) 2017/2226 del Parlamento Europeo y del Consejo en lo que respecta a la información que ha de facilitarse a la Comisión sobre el
+          sellado de documentos de viaje en supuestos excepcionales [C(2021) 3154]; Decisión de Ejecución de la Comisión, de 30.6.2021, por
+          la que se establecen disposiciones de aplicación del Reglamento (UE) 2017/2226 del Parlamento Europeo y del Consejo en lo que
+          respecta a las especificaciones y condiciones del sitio web público [C(2021) 4299]; Reglamento de Ejecución (UE) 2022/1409 de la
+          Comisión, relativo a las normas detalladas sobre las condiciones de funcionamiento del servicio web y las normas de seguridad y
+          protección de datos aplicables al servicio web, así como sobre medidas para el desarrollo y la ejecución técnica del servicio web, y por
+          el que se deroga el Reglamento de Ejecución (UE) 2021/1224 (DO L 216 de 19.8.2022, p. 3, ELI: http://data.europa.eu/eli/reg_impl/
+          2022/1409/oj); Decisión de Ejecución (UE) 2022/1337 de la Comisión, de 28 de julio de 2022, por la que se establece el modelo para
+          proporcionar información a los nacionales de terceros países sobre el tratamiento de datos personales en el Sistema de Entradas y
+          Salidas (DO L 201 de 1.8.2022, p. 48, ELI; http://data.europa.eu/eli/dec_impl/2022/1337/oj); Decisión de Ejecución (UE) 2023/2601
+          de la Comisión, de 20 de noviembre de 2023, por la que se establecen normas detalladas sobre la gestión de la funcionalidad de
+          gestión centralizada de las listas de autoridades nacionales competentes que acceden al Sistema de Entradas y Salidas y al Sistema de
+          Información de Visados (DO L, 2023/2601, 22.11.2023, ELI: http://data.europa.eu/eli/dec_impl/2023/2601/oj).
+
+
+ELI: http://data.europa.eu/eli/dec_impl/2025/1544/oj                                                                                                    1/3
+ES                                                                                                                          DO L de 31.7.2025
+
+
+
+            Estados miembros han notificado la validación de las medidas legales y técnicas para recopilar y transmitir al SES los
+            datos a que se refieren los artículos 16 a 20 del Reglamento (UE) 2017/2226, y los Estados miembros han notificado
+            a la Comisión el responsable del tratamiento, las autoridades competentes que tendrán acceso para introducir,
+            rectificar, completar, suprimir, consultar o buscar datos en el SES, sus autoridades designadas y sus puntos de acceso
+            central.
+
+
+
+      (4)   Procede, por tanto, determinar la fecha de inicio del funcionamiento del Sistema de Entradas y Salidas.
+
+
+
+      (5)   El Consejo refrendó la hoja de ruta de interoperabilidad el 5 de marzo de 2025, en la que se prevé el inicio del
+            funcionamiento del SES en octubre de 2025.
+
+
+
+      (6)   La fecha más adecuada, para que los Estados miembros puedan alcanzar de manera oportuna los objetivos del SES, es
+            el 12 de octubre de 2025, ya que así se evitan los períodos de tráfico intenso en las fronteras exteriores.
+
+
+
+      (7)   A fin de que todas las partes interesadas puedan adoptar las disposiciones prácticas necesarias para preparar la
+            entrada en funcionamiento del SES, la presente Decisión debe entrar en vigor el día de su publicación.
+
+
+
+      (8)   Dado que el Reglamento (UE) 2017/2226 desarrolla el acervo de Schengen, Dinamarca notificó su decisión de
+            incorporar el Reglamento (UE) 2017/2226 a su legislación nacional, de conformidad con el artículo 4 del Protocolo
+            sobre la posición de Dinamarca, anejo al Tratado de la Unión Europea y al Tratado de Funcionamiento de la Unión
+            Europea, y, por lo tanto, Dinamarca está vinculada por la presente Decisión.
+
+
+
+      (9)   La presente Decisión no constituye un desarrollo de las disposiciones del acervo de Schengen en las que Irlanda
+            participa de conformidad con la Decisión 2002/192/CE del Consejo (3); por lo tanto, Irlanda no participa en su
+            adopción y no queda vinculada por ella ni sujeta a su aplicación.
+
+
+
+      (10) Por lo que respecta a Islandia y Noruega, la presente Decisión constituye un desarrollo de las disposiciones del acervo
+           de Schengen en el sentido del Acuerdo celebrado por el Consejo de la Unión Europea, la República de Islandia y el
+           Reino de Noruega sobre la asociación de estos dos Estados a la ejecución, aplicación y desarrollo del acervo de
+           Schengen (4), que entran en el ámbito mencionado en el artículo 1, punto A, de la Decisión 1999/437/CE del
+           Consejo (5).
+
+
+
+      (11) Por lo que respecta a Suiza, la presente Decisión constituye un desarrollo de las disposiciones del acervo de Schengen
+           en el sentido del Acuerdo entre la Unión Europea, la Comunidad Europea y la Confederación Suiza sobre la
+           asociación de la Confederación Suiza a la ejecución, aplicación y desarrollo del acervo de Schengen (6), que entran en
+           el ámbito mencionado en el artículo 1, punto A, de la Decisión 1999/437/CE del Consejo, en relación con el
+           artículo 3 de la Decisión 2008/146/CE del Consejo (7).
+
+
+      (3) Decisión 2002/192/CE del Consejo, de 28 de febrero de 2002, sobre la solicitud de Irlanda de participar en algunas de las
+          disposiciones del acervo de Schengen (DO L 64 de 7.3.2002, p. 20, ELI: http://data.europa.eu/eli/dec/2002/192/oj).
+      (4) DO L 176 de 10.7.1999, p. 36, ELI: http://data.europa.eu/eli/agree_internation/1999/439(1)/oj.
+      (5) Decisión 1999/437/CE del Consejo, de 17 de mayo de 1999, relativa a determinadas normas de desarrollo del Acuerdo celebrado por
+          el Consejo de la Unión Europea con la República de Islandia y el Reino de Noruega sobre la asociación de estos dos Estados a la
+          ejecución, aplicación y desarrollo del acervo de Schengen (DO L 176 de 10.7.1999, p. 31, ELI: http://data.europa.eu/eli/dec/1999/
+          437/oj).
+      (6) DO L 53 de 27.2.2008, p. 52, ELI: http://data.europa.eu/eli/agree_internation/2008/178(1)/oj.
+      (7) Decisión 2008/146/CE del Consejo, de 28 de enero de 2008, relativa a la celebración, en nombre de la Comunidad Europea, del
+          Acuerdo entre la Unión Europea, la Comunidad Europea y la Confederación Suiza sobre la asociación de la Confederación Suiza a la
+          ejecución, aplicación y desarrollo del acervo de Schengen (DO L 53 de 27.2.2008, p. 1, ELI: http://data.europa.eu/eli/dec/2008/
+          146/oj).
+
+
+2/3                                                                                     ELI: http://data.europa.eu/eli/dec_impl/2025/1544/oj
+DO L de 31.7.2025                                                                                                                                  ES
+
+      (12) Por lo que respecta a Liechtenstein, la presente Decisión constituye un desarrollo de las disposiciones del acervo de
+           Schengen en el sentido del Protocolo entre la Unión Europea, la Comunidad Europea, la Confederación Suiza y el
+           Principado de Liechtenstein sobre la adhesión del Principado de Liechtenstein al Acuerdo entre la Unión Europea, la
+           Comunidad Europea y la Confederación Suiza sobre la asociación de la Confederación Suiza a la ejecución,
+           aplicación y desarrollo del acervo de Schengen (8), que entran en el ámbito mencionado en el artículo 1, punto A, de
+           la Decisión 1999/437/CE del Consejo, en relación con el artículo 3 de la Decisión 2011/350/UE del Consejo (9).
+
+      (13) Por lo que se refiere a Chipre, se ha dado efecto a las disposiciones del acervo de Schengen relativas al Sistema de
+           Información de Schengen mediante la Decisión (UE) 2023/870 del Consejo (10). Sin embargo, para que pueda
+           funcionar el SES también es necesaria la concesión de acceso pasivo al Sistema de Información de Visados una vez
+           que se haya completado satisfactoriamente la verificación de conformidad con el procedimiento de evaluación de
+           Schengen aplicable. Solo deben utilizar el SES aquellos Estados miembros que cumplan esta condición cuando entre
+           en funcionamiento el SES. Por lo tanto, ya que Chipre no va a utilizar el SES desde el inicio de su funcionamiento,
+           debe conectarse a este sistema con arreglo al procedimiento establecido en el Reglamento (UE) 2017/2226 tan
+           pronto como se cumplan todas las condiciones necesarias.
+
+
+      HA ADOPTADO LA PRESENTE DECISI�N:
+
+
+                                                                     Artículo 1
+
+      El Sistema de Entradas y Salidas establecido por el Reglamento (UE) 2017/2226 entrará en funcionamiento el 12 de octubre
+      de 2025.
+
+
+                                                                     Artículo 2
+
+      La presente Decisión entrará en vigor el día de su publicación en el Diario Oficial de la Unión Europea.
+
+
+
+      Hecho en Bruselas, el 30 de julio de 2025.
+
+
+                                                                                                 Por la Comisión
+                                                                                                  La Presidenta
+                                                                                            Ursula VON DER LEYEN
+
+
+
+
+      (8) DO L 160 de 18.6.2011, p. 21.
+      (9) Decisión 2011/350/UE del Consejo, de 7 de marzo de 2011, relativa a la celebración, en nombre de la Unión Europea, del Protocolo
+           entre la Unión Europea, la Comunidad Europea, la Confederación Suiza y el Principado de Liechtenstein sobre la adhesión del
+           Principado de Liechtenstein al Acuerdo entre la Unión Europea, la Comunidad Europea y la Confederación Suiza sobre la asociación
+           de la Confederación Suiza a la ejecución, aplicación y desarrollo del acervo de Schengen, sobre la supresión de controles en las
+           fronteras internas y la circulación de personas (DO L 160 de 18.6.2011, p. 19, ELI: http://data.europa.eu/eli/dec/2011/350/oj).
+      (10) Decisión (UE) 2023/870 del Consejo, de 25 de abril de 2023, sobre la aplicación de las disposiciones del acervo de Schengen relativas
+           al Sistema de Información de Schengen en la República de Chipre (DO L 113 de 28.4.2023, p. 44, ELI: http://data.europa.eu/eli/dec/
+           2023/870/oj).
+
+
+ELI: http://data.europa.eu/eli/dec_impl/2025/1544/oj                                                                                               3/3
