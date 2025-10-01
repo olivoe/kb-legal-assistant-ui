@@ -52,10 +52,9 @@ type KBItem = {
     const base = guessPublicUrl(originFromRoute);
     const url = `${base}/embeddings.json`;
     const res = await fetch(url, {
-      cache: "no-store",
-      // @ts-expect-error Next.js hint to avoid caching entirely
-      next: { revalidate: 0 },
-    });
+        cache: "no-store",
+        next: { revalidate: 0 },
+      });
     if (!res.ok) throw new Error(`Failed to load ${url}: HTTP ${res.status}`);
     const json = (await res.json()) as KB;
     if (!json || !Array.isArray(json.items) || typeof json.dims !== "number") {
