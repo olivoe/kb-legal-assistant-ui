@@ -37,8 +37,9 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
   const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
   if (texts.some((s) => volatile.test(s))) return true;
   const spainMarkers = [
-    "españa", "boe", "boe.es", "extranjería", "nie", "tie",
-    "ministerio", "sede electrónica", "modelo ex", "arraigo", "cita previa",
+    "españa", "espana", "boe", "boe.es", "extranjería", "extranjeria", "nie", "tie",
+    "ministerio", "sede electrónica", "sede electronica", "modelo ex", "arraigo", "cita previa",
+    "nacionalidad", "refugiados", "refugiado", "asilo", "asilados",
   ];
   return texts.some((s) => spainMarkers.some((k) => s.includes(k)));
 }
