@@ -23,6 +23,8 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "usa", "united states", "estados unidos", "eeuu", "ee.uu.",
   ];
   if (texts.some((s) => negatives.some((k) => s.includes(k)))) return false;
+  
+  // Enhanced Spain markers including follow-up question terms
   const spainMarkers = [
     "españa", "espana", "boe", "boe.es", "extranjería", "extranjeria", "nie", "tie",
     "ministerio", "sede electrónica", "sede electronica", "modelo ex", "arraigo", "cita previa",
@@ -31,10 +33,22 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "impreso", "formulario", "solicitud", "seguro", "medico", "medica", "cobertura",
     "pasaporte", "consulado", "consular", "autorizacion", "menores", "adultos",
     "educacion", "institucion", "universidad", "curso", "estudios",
+    "antecedentes", "penales", "certificado", "traduccion", "legalizacion", "apostilla",
+    "venezolano", "venezuela", "colombiano", "colombia", "ecuatoriano", "ecuador",
+    "peruano", "peru", "argentino", "argentina", "mexicano", "mexico",
   ];
+  
   // Treat as in-domain if Spain markers present OR volatile immigration keywords appear
   const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
-  return texts.some((s) => spainMarkers.some((k) => s.includes(k)) || volatile.test(s));
+  
+  // Additional check: if question contains follow-up indicators, be more lenient
+  const followUpIndicators = /^(y|si|como|donde|cuando|que|como hago|como obtengo|donde obtengo|donde consigo|como consigo|si soy|si tengo|si es|si puede|si sirve|si funciona)/i;
+  
+  return texts.some((s) => 
+    spainMarkers.some((k) => s.includes(k)) || 
+    volatile.test(s) ||
+    followUpIndicators.test(s.trim())
+  );
 }
 
 function logRouteMetrics(data: Record<string, unknown>) {
