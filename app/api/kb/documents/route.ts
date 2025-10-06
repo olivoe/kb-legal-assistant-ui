@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const origin = req.nextUrl.origin;
-    const { documents } = await loadKB(origin);
+    const { items } = await loadKB(origin);
+    
+    // Extract unique document paths from KB items
+    const documents = Array.from(new Set(items.map(item => item.file)));
     
     return new Response(JSON.stringify({ 
       ok: true, 
