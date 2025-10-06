@@ -20,6 +20,55 @@ async function safeText(r: Response) {
   }
 }
 
+// Lightweight domain classifier for "Inmigración a España"
+function isInSpanishImmigrationDomain(q: string): boolean {
+  const s = (q || "").toLowerCase();
+  const keywords = [
+    // Spanish
+    "inmigr", // inmigración, inmigrante
+    "arraigo",
+    "residenc",
+    "nacionalidad",
+    "visado",
+    "extranjer",
+    "boe",
+    "ministerio",
+    "permiso de trabajo",
+    "nie ",
+    "reagrupación",
+    "empadron",
+    "autorización",
+    "renovación",
+    "cita previa",
+    "tie ",
+    "consulado",
+    "oficina de extranjería",
+    "sede electrónica",
+    "modelo ex",
+    "tasas",
+    "formulario",
+    "convocatoria",
+    // English equivalents
+    "immigrat", // immigration, immigrant
+    "residence",
+    "nationality",
+    "visa",
+    "foreign",
+    "work permit",
+    "consulate",
+    "foreigners office",
+    "electronic headquarters",
+    "fee ",
+    "form ",
+    "call for applications",
+  ];
+  return keywords.some(k => s.includes(k));
+}
+
+function logRouteMetrics(data: Record<string, unknown>) {
+  try { console.log(JSON.stringify({ level: "info", event: "rag.route", ...data })); } catch {}
+}
+
 type EnrichedKBHit = {
   id: string;
   score: number;
@@ -73,7 +122,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2) KB search
+    // 2) KB search + domain routing
+    const inDomain = isInSpanishImmigrationDomain(question);
     const hits = await searchKB(qVec, { k: topK, minScore });
     const topScore = hits[0]?.score ?? 0;
 
@@ -95,10 +145,11 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // 4) Optional web fallback (only when kbOnly=false and confidence is weak)
+    // 4) Optional web fallback (only when kbOnly=false and confidence is weak OR volatile topic)
     //    Heuristic: no KB hits OR topScore below max(minScore, 0.65)
+    const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|última|ultima/i.test(question);
     let webEnriched: EnrichedWebHit[] = [];
-    if (!kbOnly && (kbEnriched.length === 0 || topScore < Math.max(minScore, 0.65))) {
+    if (!kbOnly && (kbEnriched.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile)) {
       const web = await webFallback(question, 3); // returns [{snippet,url}]
       webEnriched = (web || [])
         .filter((w) => !!w.url)
@@ -115,8 +166,25 @@ export async function POST(req: NextRequest) {
     // 5) Combine evidence
     const allEnriched = [...kbEnriched, ...webEnriched];
 
+    if (!inDomain && kbEnriched.length === 0) {
+      const ms = Date.now() - t0;
+      logRouteMetrics({ reqId, inDomain, route: "specialization", topScore, topK, minScore, ms });
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          question,
+          answer: "Esta IA está especializada en temas de Inmigración a España.",
+          citations: [],
+          reqId,
+          runtime_ms: ms,
+        }),
+        { status: 200, headers: { "content-type": "application/json", "x-request-id": reqId, "x-runtime-ms": String(ms) } }
+      );
+    }
+
     if (allEnriched.length === 0) {
       const ms = Date.now() - t0;
+      logRouteMetrics({ reqId, inDomain, route: "unsure", topScore, topK, minScore, ms });
       return new Response(
         JSON.stringify({
           ok: true,
@@ -191,6 +259,7 @@ export async function POST(req: NextRequest) {
     }));
 
     const ms = Date.now() - t0;
+    logRouteMetrics({ reqId, inDomain, route: webEnriched.length > 0 ? "kb+web" : "kb", topScore, topK, minScore, ms });
     return new Response(
       JSON.stringify({
         ok: true,

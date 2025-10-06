@@ -1,0 +1,8 @@
+“Priority Goals of AI Agent Project”:
+
+Ship a ChatGPT-style UI at ai.olivogalarza.com with an input box and a transcript showing all user messages and LLM answers.
+
+That UI must answer from the KB; if confidence is low or the KB is insufficient, it should gracefully use open web sources to produce the answer.
+
+
+

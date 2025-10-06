@@ -4,6 +4,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? '';
 
+const BUILD_TAG = process.env.NEXT_PUBLIC_BUILD_TAG ?? "dev-local";
+if (typeof window !== "undefined") {
+  console.log("[KB-UI BUILD]", BUILD_TAG, "pathname:", location.pathname);
+}
+
 type Role = 'user' | 'assistant';
 type Msg = { id: string; role: Role; content: string };
 
@@ -41,7 +46,8 @@ export default function Home() {
           <div>
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>KB Chat UI</h1>
             <div style={{ marginTop: 4, color: '#666', fontSize: 12 }}>
-              API base: <code>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code>
+              API base: <code>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code> ·
+              <span style={{ marginLeft: 6 }}>BUILD: <code>{BUILD_TAG}</code></span>
             </div>
           </div>
           <Ping />
@@ -199,11 +205,12 @@ function ChatShell({ apiBase, stream = true }: { apiBase: string; stream?: boole
 
 /** Robust SSE reader for multiple stream formats */
 async function callStream(apiBase: string, question: string, onToken: (delta: string) => void) {
-  const url = `${apiBase}/api/chat?stream=1&limit=5`;
+  const url = `${apiBase}/api/rag/stream?limit=5`;
+  console.log("[STREAM FETCH URL]", url); // <-- TEMP probe
   const resp = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: [{ role: 'user', content: question }] }),
+    body: JSON.stringify({ question, topK: 6, minScore: 0.25, kbOnly: true }),
   });
 
   if (!resp.ok || !resp.body) {

@@ -1,0 +1,112 @@
+Rules of Engagement (RoE) v1.1 — AI Agent (Inmigración a España)
+
+1) Domain routing (“Inmigración a España”)
+
+If the question is about immigration to Spain: use the KB first. If confidence is low, do a web fallback.
+
+If the question is not about immigration but appears in the KB: still answer from the KB and also check the web for the most recent info; cite those sources (hidden by default).
+
+If the question is not about immigration and not in the KB: respond exactly, “Esta IA está especializada en temas de Inmigración a España.”
+
+Use a lightweight domain classifier (keywords with an optional quick LLM check) to set the domain flag.
+
+Use the top KB hit score to decide on web fallback (threshold ≈ 0.55 when kbOnly=false).
+
+2) Accuracy & grounding
+
+Every claim must be supported by KB or web sources; never fabricate citations.
+
+When web fallback is used, include at least 1–3 official URLs in the citations (kept hidden by default).
+
+Prefer official/primary sources in this order: BOE and ministerial → autonómico/consular → others.
+
+For volatile topics (tasas, formularios, convocatorias), state the update date and prefer the latest valid version; if sources conflict, prefer the newer official one and note the reconciliation.
+
+3) Behavior when unsure
+
+If neither the KB nor the web provides support, reply exactly: “Respuesta incierta. Contáctenos.”
+
+4) Citations hidden by default
+
+Do not display sources automatically. Show them only when the user clicks “Ver fuentes” or explicitly asks.
+
+In the UI, keep the sources panel collapsible and collapsed by default; only render links when expanded.
+
+5) Completeness & style (Spanish, 3–6 sentences, neutral legal tone)
+
+Answer in Spanish, with 3–6 sentences, concise legal tone.
+
+Use bullet points for procedures and bold for key terms.
+
+The finalization step should trim or expand to land within 3–6 sentences unless the user requested more detail.
+
+6) Guardrails / disclaimer
+
+Show this disclaimer once per session (on the first answer):“Esta IA puede cometer errores; use la información de forma referencial y contáctenos ante cualquier duda.”
+
+Track whether it’s been shown with a session-scoped flag.
+
+7) Formatting rules
+
+Procedures → bullets; key terms in negrita.
+
+If an answer exceeds six sentences, prepend a brief “Resumen:” line before the full text.
+
+Keep formatting minimal and avoid over-processing the model’s output.
+
+8) Session memory
+
+Maintain rolling context for the same chat (roughly the last 8–10 turns) and include it in answer generation.
+
+Bound context length to control token cost and avoid drift.
+
+9) Routing flow (narrative, no code)
+
+Classify the query’s domain and run KB retrieval.
+
+If out of domain and there are no KB hits, return the specialization message.
+
+If KB confidence is below the threshold and web is allowed, run the web fallback and merge evidence.
+
+If there is still no grounded evidence, return the “Respuesta incierta” text.
+
+Finalize the answer in Spanish with the style constraints; apply formatting; keep citations hidden unless requested.
+
+10) Web fallback guardrails (volatile topics)
+
+Trigger web fallback even with decent KB scores when the query involves tasas, formularios, convocatorias, or contains “última/actualizada/vigente”.
+
+Prefer official domains (e.g., BOE, ministerial, sedes electrónicas, official consulates).
+
+Cap external sources to a small, authoritative set and record the date of each cited item.
+
+11) Metrics & alerts
+
+Track: domain routing rates (in-domain vs out-of-domain), web fallback rate, official-hit rate, unsure rate, style compliance (average sentence count; presence of bullets for procedures), and freshness (days since last update on volatile claims).
+
+Set alerts for spikes in “Respuesta incierta”, drops in official-hit rate, or stale-date usage.
+
+12) Unit-test checklist (textual)
+
+Domain detection: “Requisitos arraigo social” must be in domain.
+
+Out-of-domain: “H-1B USA” with no KB hit must return the specialization message.
+
+Fallback trigger: low KB score must cause a web check.
+
+Unsure path: no evidence must return the exact unsure string.
+
+Style: answers must land in 3–6 sentences with bold key terms and bullets where a procedure is detected.
+
+Disclaimer: appears only on the first answer of the session.
+
+13) Nice-to-haves (near-term)
+
+Add a computed confidence score (gap between top KB hits + citation density) to feed human review gates.
+
+Integrate permission tiers for any tool with side effects (read-only by default).
+
+Persist a brief session summary every 3–5 turns to stabilize context (with user consent).
+
+
+

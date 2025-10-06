@@ -7,14 +7,16 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "next lint",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "docx:txt": "node scripts/docx-to-txt.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.35.4",
     "next": "^15.5.4",
     "pdfjs-dist": "^5.4.149",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "mammoth": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "20.14.11",

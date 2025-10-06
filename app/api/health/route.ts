@@ -9,37 +9,36 @@ export async function GET(req: NextRequest) {
   const reqId = genRequestId();
   const t0 = Date.now();
 
-  const withHeaders = (r: Response) => {
-    r.headers.set("Cache-Control", "no-store");
-    r.headers.set("X-Request-Id", reqId);
-    r.headers.set("X-Runtime-MS", String(Date.now() - t0));
-    return r;
-  };
-
-  const origin = new URL(req.url).origin;
-
-  const hasKey = !!process.env.OPENAI_API_KEY;
   let kb = { count: 0, dim: 0 };
-  let kbError: string | undefined;
+  let kbErr: string | null = null;
 
   try {
-    const { dim, items } = await loadKB(origin);
+    const origin = req.nextUrl.origin;
+    const { items, dim } = await loadKB(origin);
     kb = { count: items.length, dim };
   } catch (e: any) {
-    kbError = String(e?.message ?? e);
+    kbErr = String(e?.message ?? e);
   }
 
-  return withHeaders(
-    Response.json({
-      ok: true,
-      hasKey,
-      kb,
-      kbError,
-      env: {
-        // lightweight sanity (omit secrets)
-        vercelUrl: process.env.VERCEL_URL ?? null,
-        nodeEnv: process.env.NODE_ENV ?? null,
-      },
-    })
-  );
+  const body = {
+    ok: true,
+    env: {
+      OPENAI_CHAT_MODEL: process.env.OPENAI_CHAT_MODEL ?? null,
+      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+      hasTavilyKey: Boolean(process.env.TAVILY_API_KEY),
+    },
+    kb,
+    kbError: kbErr,
+  };
+
+  const ms = Date.now() - t0;
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "x-request-id": reqId,
+      "x-runtime-ms": String(ms),
+      "cache-control": "no-store",
+    },
+  });
 }

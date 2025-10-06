@@ -1,97 +1,74 @@
 // app/api/chat/route.ts
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { genRequestId } from "@/lib/server/reqid";
+import { embedText } from "@/lib/llm/embed";
+import { searchKB } from "@/lib/rag/search";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+// ======================= (A) Add this helper near the top =======================
+function withDebugHeaders(res: NextResponse, headers: Record<string, string>) {
+  for (const [k, v] of Object.entries(headers)) res.headers.set(k, v);
+  return res;
+}
+
+function logMetrics(metrics: Record<string, unknown>) {
+  // Single JSON line for easy grep / dashboarding
+  console.log(JSON.stringify({ level: "info", event: "rag.metrics", ...metrics }));
+}
+// ==============================================================================
 
 // Simple ping for your header button
 export async function GET() {
   const reqId = genRequestId();
   const t0 = Date.now();
-  const resp = new Response("ok", { headers: { "cache-control": "no-store" } });
-  resp.headers.set("X-Request-Id", reqId);
-  resp.headers.set("X-Runtime-MS", String(Date.now() - t0));
-  return resp;
+  const headers: Record<string, string> = {
+    "cache-control": "no-store",
+    "X-Request-Id": reqId,
+    "X-Runtime-MS": String(Date.now() - t0),
+    "Access-Control-Expose-Headers": "x-probe, x-rag-top-score, x-rag-topk, x-rag-min-score, x-route",
+    "x-probe": "ui-sse-patch-1",
+  };
+  const res = new NextResponse("ok", { status: 200 });
+  Object.entries(headers).forEach(([k, v]) => res.headers.set(k, v));
+  return res;
 }
 
 export async function POST(req: NextRequest) {
   const reqId = genRequestId();
   const t0 = Date.now();
 
-  const url = new URL(req.url);
-  const stream = url.searchParams.get("stream") === "1";
-  const origin = url.origin;
+  // 🔁 Use Next.js' parsed URL (reliable on Vercel)
+  const url = req.nextUrl;
+  const streamParam = url.searchParams.get("stream");
+  const stream = streamParam === "1" || streamParam === "true";
 
-  // Expect OpenAI-style body: { messages: [{role, content}, ...] }
-  const body = await req.json().catch(() => ({} as any));
-  const msgs = Array.isArray(body?.messages) ? body.messages : [];
-  const last = msgs.slice().reverse().find((m: any) => m?.role === "user");
-  const question = (last?.content ?? "").toString();
-
-  // Optional knobs (fallback to query params if provided)
-  const topK = Number(body?.topK ?? url.searchParams.get("topK") ?? 6);
-  const minScore = Number(body?.minScore ?? url.searchParams.get("minScore") ?? 0.25);
-  const kbOnly = (body?.kbOnly ?? url.searchParams.get("kbOnly") ?? "true").toString() === "true";
-
-  if (!question.trim()) {
-    const out = Response.json(
-      { ok: false, error: "Missing user question in messages[]" },
-      { status: 400 }
-    );
-    out.headers.set("X-Request-Id", reqId);
-    out.headers.set("X-Runtime-MS", String(Date.now() - t0));
-    return out;
-  }
-
+  // 🛑 TEMP: disable /api/chat streaming to force the UI to /api/rag/stream
   if (stream) {
-    // Proxy to /api/rag/stream and pass through SSE
-    const upstream = await fetch(`${origin}/api/rag/stream`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question, topK, minScore, kbOnly }),
-    });
-
-    if (!upstream.ok || !upstream.body) {
-      const text = await upstream.text().catch(() => "");
-      const out = new Response(text || `Upstream error ${upstream.status}`, { status: 500 });
-      out.headers.set("X-Request-Id", reqId);
-      out.headers.set("X-Runtime-MS", String(Date.now() - t0));
-      return out;
-    }
-
-    const out = new Response(upstream.body, {
+    return new Response("chat proxy disabled; use /api/rag/stream", {
+      status: 410,
       headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-store, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "x-probe": "chat-stream-disabled/nextUrl",
+        "x-stream-param": String(streamParam),
         "X-Request-Id": reqId,
         "X-Runtime-MS": String(Date.now() - t0),
       },
     });
-    return out;
-  } else {
-    // Non-stream → proxy to /api/rag/answer
-    const upstream = await fetch(`${origin}/api/rag/answer`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question, topK, minScore, kbOnly }),
-    });
-
-    const json = await upstream.json().catch(() => null);
-    if (!upstream.ok || !json) {
-      const out = Response.json(
-        { ok: false, error: `Upstream error ${upstream.status}` },
-        { status: 500 }
-      );
-      out.headers.set("X-Request-Id", reqId);
-      out.headers.set("X-Runtime-MS", String(Date.now() - t0));
-      return out;
-    }
-
-    const out = Response.json({ ok: true, answer: json.answer ?? "" });
-    out.headers.set("X-Request-Id", reqId);
-    out.headers.set("X-Runtime-MS", String(Date.now() - t0));
-    return out;
   }
+
+  // For now, non-streaming POST to /api/chat remains disabled during migration
+  return new Response("chat proxy disabled; use /api/rag/answer or /api/rag/stream", {
+    status: 410,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "x-probe": "chat-post-hard-disabled",
+      "X-Request-Id": reqId,
+      "X-Runtime-MS": String(Date.now() - t0),
+    },
+  });
 }

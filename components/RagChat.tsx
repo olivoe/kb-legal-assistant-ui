@@ -26,6 +26,12 @@ export default function RagChat() {
   const ctrlRef = useRef<AbortController | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const [reqInfo, setReqInfo] = useState<{ id?: string; ms?: number }>({});
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
+const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
+
+  // RoE disclaimer (one-time per session)
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const disclaimerKey = "roe_disclaimer_shown_ui";
 
   // Load saved controls once
   useEffect(() => {
@@ -56,12 +62,19 @@ export default function RagChat() {
     setReqInfo({});
 
     try {
-      const res = await fetch("/api/rag/answer", {
+      const res = await fetch(api("/api/rag/answer"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ question: q, topK, minScore, kbOnly }),
       });
       const json = await res.json();
+
+      // One-time disclaimer hook (non-stream)
+      if (json?.disclaimerInjected && !sessionStorage.getItem(disclaimerKey)) {
+        setShowDisclaimer(true);
+        sessionStorage.setItem(disclaimerKey, "1");
+      }
+
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || `HTTP ${res.status}`);
       }
@@ -100,13 +113,18 @@ export default function RagChat() {
 
     try {
       await readRagStream(
-        "/api/rag/stream",
+        api("/api/rag/stream"),
         { question: q, topK, minScore, kbOnly },
         {
           onInit: () => {},
-          onMeta: (m: any) => setReqInfo({ id: m?.reqId }),
-          onSources: (p: any) => {
-            if (Array.isArray(p?.citations)) setSources(p.citations);
+          onMeta: (m: any) => {
+            setReqInfo({ id: m?.reqId });
+
+            // One-time disclaimer hook (stream) — will activate once server emits it in meta
+            if (m?.disclaimerInjected && !sessionStorage.getItem(disclaimerKey)) {
+              setShowDisclaimer(true);
+              sessionStorage.setItem(disclaimerKey, "1");
+            }
           },
           onDelta: (d: string) => {
             setAnswer((prev) => prev + d);
@@ -138,6 +156,15 @@ export default function RagChat() {
   return (
     <div className="mx-auto max-w-3xl p-4 space-y-4">
       <h1 className="text-2xl font-semibold">KB Legal Assistant — RAG Stream</h1>
+
+      {showDisclaimer && (
+        <div className="rounded-2xl p-3 text-sm border shadow-sm">
+          Esta IA puede cometer errores; use la información de forma referencial y contáctenos ante cualquier duda.
+        </div>
+      )}
+
+// In RagChat.tsx, anywhere near the header:
+<p className="text-xs opacity-60">API: {api("/api/rag/answer")}</p>
 
       <div className="flex items-center gap-2">
         <input
