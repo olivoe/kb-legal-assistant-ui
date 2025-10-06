@@ -136,7 +136,10 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
           },
           onMetrics: (m: any) => {
             setReqInfo((r) => ({ ...r, ms: m?.runtime_ms }));
-            if (typeof m?.route === "string") setRouteBadge(m.route);
+            if (typeof m?.route === "string") {
+              console.log("[ROUTE DEBUG]", m.route);
+              setRouteBadge(m.route);
+            }
           },
           onError: (err: string) => {
             setAnswer((prev) =>
