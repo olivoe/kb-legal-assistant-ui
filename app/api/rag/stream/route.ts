@@ -27,7 +27,9 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "españa", "boe", "boe.es", "extranjería", "nie", "tie",
     "ministerio", "sede electrónica", "modelo ex", "arraigo", "cita previa",
   ];
-  return texts.some((s) => spainMarkers.some((k) => s.includes(k)));
+  // Treat as in-domain if Spain markers present OR volatile immigration keywords appear
+  const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
+  return texts.some((s) => spainMarkers.some((k) => s.includes(k)) || volatile.test(s));
 }
 
 function logRouteMetrics(data: Record<string, unknown>) {

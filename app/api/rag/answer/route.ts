@@ -30,6 +30,9 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "usa", "united states", "estados unidos", "eeuu", "ee.uu.",
   ];
   if (texts.some((s) => negatives.some((k) => s.includes(k)))) return false;
+  // Volatile immigration keywords should be treated as in-domain even without Spain markers
+  const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
+  if (texts.some((s) => volatile.test(s))) return true;
   const spainMarkers = [
     "españa", "boe", "boe.es", "extranjería", "nie", "tie",
     "ministerio", "sede electrónica", "modelo ex", "arraigo", "cita previa",
@@ -123,8 +126,14 @@ export async function POST(req: NextRequest) {
     let webEnriched: EnrichedWebHit[] = [];
     const attemptedFallback = !kbOnly && (kbEnriched.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile);
     if (attemptedFallback) {
-      const boostedQuery = isVolatile ? `${question} España site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es` : question;
-      const web = await webFallback(boostedQuery, 3); // returns [{snippet,url}]
+      const primary = isVolatile
+        ? `${question} España tasas estudiante site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es OR site:boe.es/boe`
+        : `${question} España`;
+      let web = await webFallback(primary, 3);
+      if (!web || web.length === 0) {
+        const secondary = `${question} España tasas estudiantes site:universia.es OR site:europa.eu OR site:boe.es`;
+        web = await webFallback(secondary, 3);
+      }
       webEnriched = (web || [])
         .filter((w) => !!w.url)
         .map((w, i) => ({
