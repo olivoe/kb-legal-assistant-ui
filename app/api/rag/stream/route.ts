@@ -90,7 +90,11 @@ export async function POST(req: NextRequest) {
     const topScores = (hits ?? []).map(h => h?.score ?? 0).slice(0, 5);
     const topScore = topScores[0] ?? 0;
     const inDomain = isInSpanishImmigrationDomainStrict(question, rewrittenQ);
-    const route = hits.length > 0 ? "KB_ONLY" : (kbOnly ? "KB_EMPTY" : "WEB_FALLBACK");
+    const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i.test(rewrittenQ);
+    let route = "KB_ONLY" as "KB_ONLY" | "KB_EMPTY" | "WEB_FALLBACK" | "GUIDANCE";
+    if (hits.length > 0) route = "KB_ONLY";
+    else if (kbOnly) route = "KB_EMPTY";
+    else route = isVolatile ? "GUIDANCE" : "WEB_FALLBACK";
 
     // optional source log line
     try {
@@ -185,7 +189,6 @@ export async function POST(req: NextRequest) {
           }),
         );
       } else if (!kbOnly) {
-        const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b/i.test(rewrittenQ);
         const needFallback = hits.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile;
         let web: Array<{ snippet: string; url: string }> = [];
         if (needFallback) {
@@ -233,7 +236,8 @@ export async function POST(req: NextRequest) {
 
       // 6) If still empty → guidance response
       if (enriched.length === 0) {
-        await writer.write(sse(JSON.stringify({ delta: "En el contexto de la Inmigración a España, ‘tasas estudiantes actualizadas’ puede referirse a: [A] tasas de visado de estudiante, [B] tasas de expedición/renovación de TIE para estudiantes, [C] tasas administrativas en sedes oficiales. Indica el contexto específico (tipo de trámite, organismo o año) para afinar la respuesta." })));
+        const guidance = "En el contexto de la Inmigración a España, ‘tasas estudiantes actualizadas’ puede referirse a: [A] tasas de visado de estudiante, [B] tasas de expedición/renovación de TIE para estudiantes, [C] tasas administrativas en sedes oficiales. Indica el contexto específico (tipo de trámite, organismo o año) para afinar la respuesta.";
+        await writer.write(sse(JSON.stringify({ delta: guidance })));
         const ms = Date.now() - t0;
         await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms, route: "GUIDANCE" })));
         await writer.write(sse(JSON.stringify({ done: true })));
