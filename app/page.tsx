@@ -35,30 +35,30 @@ export default function Home() {
       >
         <div
           style={{
-            maxWidth: 860,
+            maxWidth: 1152, // 6xl equivalent
             margin: '0 auto',
-            padding: '12px 16px',
+            padding: '24px 32px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
           }}
         >
           <div>
-            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>KB Chat UI</h1>
-            <div style={{ marginTop: 4, color: '#666', fontSize: 12 }}>
-              API base: <code>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code> ·
-              <span style={{ marginLeft: 6 }}>BUILD: <code>{BUILD_TAG}</code></span>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#111827' }}>KB Chat UI</h1>
+            <div style={{ marginTop: 8, color: '#6b7280', fontSize: 14 }}>
+              API base: <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 4 }}>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code> ·
+              <span style={{ marginLeft: 8 }}>BUILD: <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 4 }}>{BUILD_TAG}</code></span>
             </div>
-            <div style={{ marginTop: 6, color: '#666', fontSize: 12 }}>
+            <div style={{ marginTop: 8, color: '#6b7280', fontSize: 14 }}>
               Sugerencias: prueba "Requisitos arraigo social", "TIE estudiante renovación", "tasas estudiante España 2025 BOE".
             </div>
-            <div style={{ marginTop: 4 }}>
+            <div style={{ marginTop: 6 }}>
               <a 
                 href="/kb" 
                 style={{ 
                   color: '#2563eb', 
-                  textDecoration: 'underline', 
-                  fontSize: 12,
+                  textDecoration: 'none', 
+                  fontSize: 14,
                   fontWeight: 500
                 }}
               >
@@ -135,19 +135,19 @@ function ChatShell({ apiBase, stream = true }: { apiBase: string; stream?: boole
         style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '16px',
-          maxWidth: 860,
+          padding: '32px',
+          maxWidth: 1152, // 6xl equivalent
           width: '100%',
           margin: '0 auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: 12,
+          gap: 16,
         }}
       >
         {messages.length === 0 && (
-          <div style={{ margin: '48px auto 0', maxWidth: 540, textAlign: 'center', color: '#666' }}>
-            <p style={{ margin: 0, fontSize: 14 }}>Ask me about Spanish immigration law, or anything else.</p>
-            <p style={{ marginTop: 6, fontSize: 12 }}>Shift+Enter for newline • Cmd/Ctrl+Enter to send</p>
+          <div style={{ margin: '64px auto 0', maxWidth: 600, textAlign: 'center', color: '#6b7280' }}>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>Ask me about Spanish immigration law, or anything else.</p>
+            <p style={{ marginTop: 8, fontSize: 14 }}>Shift+Enter for newline • Cmd/Ctrl+Enter to send</p>
           </div>
         )}
         {messages.map((m) => (
@@ -173,7 +173,7 @@ function ChatShell({ apiBase, stream = true }: { apiBase: string; stream?: boole
           backdropFilter: 'blur(6px)',
         }}
       >
-        <div style={{ maxWidth: 860, margin: '0 auto', padding: '12px 16px', display: 'flex', gap: 8 }}>
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '24px 32px', display: 'flex', gap: 12 }}>
           <textarea
             ref={inputRef}
             value={input}
@@ -188,27 +188,30 @@ function ChatShell({ apiBase, stream = true }: { apiBase: string; stream?: boole
             }}
             style={{
               flex: 1,
-              minHeight: 44,
+              minHeight: 48,
               maxHeight: 160,
               resize: 'vertical',
-              padding: '10px 12px',
-              borderRadius: 12,
-              border: '1px solid #ddd',
-              fontSize: 15,
-              lineHeight: '20px',
+              padding: '12px 16px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db',
+              fontSize: 16,
+              lineHeight: '24px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           />
           <button
             type="submit"
             disabled={!canSend}
             style={{
-              padding: '10px 14px',
-              borderRadius: 12,
+              padding: '12px 20px',
+              borderRadius: 8,
               border: 0,
-              background: canSend ? '#111' : '#999',
+              background: canSend ? '#111827' : '#9ca3af',
               color: '#fff',
               fontWeight: 600,
+              fontSize: 16,
               cursor: canSend ? 'pointer' : 'not-allowed',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
             Send
@@ -338,15 +341,16 @@ function Bubble({ role, content }: { role: Role; content: string }) {
       <div
         style={{
           maxWidth: '86%',
-          borderRadius: 16,
-          padding: '10px 12px',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-          border: isUser ? '0' : '1px solid #eee',
-          background: isUser ? '#111' : '#fff',
-          color: isUser ? '#fff' : '#111',
+          borderRadius: 12,
+          padding: '12px 16px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: isUser ? '0' : '1px solid #e5e7eb',
+          background: isUser ? '#111827' : '#fff',
+          color: isUser ? '#fff' : '#111827',
           whiteSpace: 'pre-wrap',
-          fontSize: 15,
-          lineHeight: '20px',
+          fontSize: 16,
+          lineHeight: '24px',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
       >
         {content || '\u00a0'}
@@ -357,7 +361,7 @@ function Bubble({ role, content }: { role: Role; content: string }) {
 
 function TypingIndicator() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#777', fontSize: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#6b7280', fontSize: 14 }}>
       <span>assistant is typing…</span>
     </div>
   );
@@ -383,19 +387,20 @@ function Ping() {
       <button
         onClick={pingApi}
         disabled={loading}
-        style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #ddd', background: '#fff', fontSize: 12 }}
+        style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', fontSize: 14, fontFamily: 'system-ui, -apple-system, sans-serif' }}
       >
         {loading ? 'Pinging…' : 'Ping /api/chat'}
       </button>
       {res && (
         <span
           style={{
-            color: '#666',
-            fontSize: 12,
+            color: '#6b7280',
+            fontSize: 14,
             maxWidth: 260,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
           }}
         >
           {res}
