@@ -264,7 +264,7 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures.",
+            "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures. When recommending legal consultation, always suggest: 'Consúltenos en Olivo Galarza Abogados donde le daremos orientación detallada y actualizada sobre el procedimiento y los requisitos específicos para [specific case].'",
         },
         { role: "user", content: `Pregunta: ${question}\n\nContexto (fragmentos):\n${ctxBlocks}` },
       ];
