@@ -40,6 +40,10 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "españa", "espana", "boe", "boe.es", "extranjería", "extranjeria", "nie", "tie",
     "ministerio", "sede electrónica", "sede electronica", "modelo ex", "arraigo", "cita previa",
     "nacionalidad", "refugiados", "refugiado", "asilo", "asilados",
+    "visado", "visa", "residencia", "residencia", "estudiante", "estudiantes",
+    "impreso", "formulario", "solicitud", "seguro", "medico", "medica", "cobertura",
+    "pasaporte", "consulado", "consular", "autorizacion", "menores", "adultos",
+    "educacion", "institucion", "universidad", "curso", "estudios",
   ];
   return texts.some((s) => spainMarkers.some((k) => s.includes(k)));
 }

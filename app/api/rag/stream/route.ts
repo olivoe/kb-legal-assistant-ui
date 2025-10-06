@@ -27,6 +27,10 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "españa", "espana", "boe", "boe.es", "extranjería", "extranjeria", "nie", "tie",
     "ministerio", "sede electrónica", "sede electronica", "modelo ex", "arraigo", "cita previa",
     "nacionalidad", "refugiados", "refugiado", "asilo", "asilados",
+    "visado", "visa", "residencia", "residencia", "estudiante", "estudiantes",
+    "impreso", "formulario", "solicitud", "seguro", "medico", "medica", "cobertura",
+    "pasaporte", "consulado", "consular", "autorizacion", "menores", "adultos",
+    "educacion", "institucion", "universidad", "curso", "estudios",
   ];
   // Treat as in-domain if Spain markers present OR volatile immigration keywords appear
   const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
@@ -333,10 +337,10 @@ export async function POST(req: NextRequest) {
 
     // ---------- (B) Response headers incl. RAG metrics ----------
     const sseHeaders: Record<string, string> = {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-store, no-transform",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-store, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
       "Access-Control-Expose-Headers":
         "x-probe, x-rag-top-score, x-rag-topk, x-rag-min-score, x-route, x-domain",
       "x-probe": "rag-sse-headers-2",
