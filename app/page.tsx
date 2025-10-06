@@ -50,7 +50,20 @@ export default function Home() {
               <span style={{ marginLeft: 6 }}>BUILD: <code>{BUILD_TAG}</code></span>
             </div>
             <div style={{ marginTop: 6, color: '#666', fontSize: 12 }}>
-              Sugerencias: prueba “Requisitos arraigo social”, “TIE estudiante renovación”, “tasas estudiante España 2025 BOE”.
+              Sugerencias: prueba "Requisitos arraigo social", "TIE estudiante renovación", "tasas estudiante España 2025 BOE".
+            </div>
+            <div style={{ marginTop: 4 }}>
+              <a 
+                href="/kb" 
+                style={{ 
+                  color: '#2563eb', 
+                  textDecoration: 'underline', 
+                  fontSize: 12,
+                  fontWeight: 500
+                }}
+              >
+                📚 Ver Base de Conocimiento ({new Date().getFullYear()})
+              </a>
             </div>
           </div>
           <Ping />
