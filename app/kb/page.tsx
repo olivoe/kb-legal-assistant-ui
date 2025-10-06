@@ -91,7 +91,7 @@ export default function KnowledgeBasePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-gray-600 mx-auto mb-6"></div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Cargando documentos</h3>
@@ -102,10 +102,10 @@ export default function KnowledgeBasePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="min-h-screen bg-white" style={{ fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif' }}>
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '24px 32px' }}>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -130,7 +130,7 @@ export default function KnowledgeBasePage() {
 
       {/* Filters */}
       <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-6">
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '24px 32px' }}>
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -162,7 +162,7 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main style={{ maxWidth: 1152, margin: '0 auto', padding: '32px' }}>
         {filteredDocs.length === 0 ? (
           <div className="text-center py-16">
             <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron documentos</h3>
@@ -217,7 +217,7 @@ export default function KnowledgeBasePage() {
 
       {/* Footer */}
       <footer className="bg-gray-50 border-t border-gray-200 mt-16">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div style={{ maxWidth: 1152, margin: '0 auto', padding: '24px 32px' }}>
           <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Olivo Galarza Abogados</h3>
             <p className="text-gray-600 mb-1">Base de Conocimiento Especializada</p>
