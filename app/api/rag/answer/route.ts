@@ -20,49 +20,21 @@ async function safeText(r: Response) {
   }
 }
 
-// Lightweight domain classifier for "Inmigración a España"
-function isInSpanishImmigrationDomain(q: string): boolean {
-  const s = (q || "").toLowerCase();
-  const keywords = [
-    // Spanish
-    "inmigr", // inmigración, inmigrante
-    "arraigo",
-    "residenc",
-    "nacionalidad",
-    "visado",
-    "extranjer",
-    "boe",
-    "ministerio",
-    "permiso de trabajo",
-    "nie ",
-    "reagrupación",
-    "empadron",
-    "autorización",
-    "renovación",
-    "cita previa",
-    "tie ",
-    "consulado",
-    "oficina de extranjería",
-    "sede electrónica",
-    "modelo ex",
-    "tasas",
-    "formulario",
-    "convocatoria",
-    // English equivalents
-    "immigrat", // immigration, immigrant
-    "residence",
-    "nationality",
-    "visa",
-    "foreign",
-    "work permit",
-    "consulate",
-    "foreigners office",
-    "electronic headquarters",
-    "fee ",
-    "form ",
-    "call for applications",
+// Strict domain classifier: negatives win; require Spain-specific markers
+function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string): boolean {
+  const texts = [original || "", rewritten || ""].map((t) => t.toLowerCase());
+  const negatives = [
+    "h-1b", "h1b", "h 1b", "h‑1b",
+    "uscis", "green card",
+    "b1", "b2", "b1/b2", "f-1", "f1", "j-1", "j1",
+    "usa", "united states", "estados unidos", "eeuu", "ee.uu.",
   ];
-  return keywords.some(k => s.includes(k));
+  if (texts.some((s) => negatives.some((k) => s.includes(k)))) return false;
+  const spainMarkers = [
+    "españa", "boe", "boe.es", "extranjería", "nie", "tie",
+    "ministerio", "sede electrónica", "modelo ex", "arraigo", "cita previa",
+  ];
+  return texts.some((s) => spainMarkers.some((k) => s.includes(k)));
 }
 
 function logRouteMetrics(data: Record<string, unknown>) {
@@ -123,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2) KB search + domain routing
-    const inDomain = isInSpanishImmigrationDomain(question);
+    const inDomain = isInSpanishImmigrationDomainStrict(question, question);
     const hits = await searchKB(qVec, { k: topK, minScore });
     const topScore = hits[0]?.score ?? 0;
 
@@ -149,8 +121,10 @@ export async function POST(req: NextRequest) {
     //    Heuristic: no KB hits OR topScore below max(minScore, 0.65)
     const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|última|ultima/i.test(question);
     let webEnriched: EnrichedWebHit[] = [];
-    if (!kbOnly && (kbEnriched.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile)) {
-      const web = await webFallback(question, 3); // returns [{snippet,url}]
+    const attemptedFallback = !kbOnly && (kbEnriched.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile);
+    if (attemptedFallback) {
+      const boostedQuery = isVolatile ? `${question} España site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es` : question;
+      const web = await webFallback(boostedQuery, 3); // returns [{snippet,url}]
       webEnriched = (web || [])
         .filter((w) => !!w.url)
         .map((w, i) => ({
@@ -166,14 +140,15 @@ export async function POST(req: NextRequest) {
     // 5) Combine evidence
     const allEnriched = [...kbEnriched, ...webEnriched];
 
-    if (!inDomain && kbEnriched.length === 0) {
+    // Hard gate: always specialize when out-of-domain
+    if (!inDomain) {
       const ms = Date.now() - t0;
       logRouteMetrics({ reqId, inDomain, route: "specialization", topScore, topK, minScore, ms });
       return new Response(
         JSON.stringify({
           ok: true,
           question,
-          answer: "Esta IA está especializada en temas de Inmigración a España.",
+          answer: "Esta IA se especializa solo en temas de Inmigración a España.",
           citations: [],
           reqId,
           runtime_ms: ms,
@@ -189,7 +164,9 @@ export async function POST(req: NextRequest) {
         JSON.stringify({
           ok: true,
           question,
-          answer: "No consta en el contexto.",
+          answer: attemptedFallback
+            ? "No consta en el contexto. Intente con ‘tasas estudiante España 2025 BOE’."
+            : "No consta en el contexto.",
           citations: [],
           reqId,
           runtime_ms: ms,

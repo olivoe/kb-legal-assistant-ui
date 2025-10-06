@@ -14,48 +14,20 @@ export const revalidate = 0;
 
 const CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL ?? "gpt-4.1-mini";
-function isInSpanishImmigrationDomain(q: string): boolean {
-  const s = (q || "").toLowerCase();
-  const keywords = [
-    // Spanish
-    "inmigr",
-    "arraigo",
-    "residenc",
-    "nacionalidad",
-    "visado",
-    "extranjer",
-    "boe",
-    "ministerio",
-    "permiso de trabajo",
-    "nie ",
-    "reagrupación",
-    "empadron",
-    "autorización",
-    "renovación",
-    "cita previa",
-    "tie ",
-    "consulado",
-    "oficina de extranjería",
-    "sede electrónica",
-    "modelo ex",
-    "tasas",
-    "formulario",
-    "convocatoria",
-    // English
-    "immigrat",
-    "residence",
-    "nationality",
-    "visa",
-    "foreign",
-    "work permit",
-    "consulate",
-    "foreigners office",
-    "electronic headquarters",
-    "fee ",
-    "form ",
-    "call for applications",
+function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string): boolean {
+  const texts = [original || "", rewritten || ""].map((t) => t.toLowerCase());
+  const negatives = [
+    "h-1b", "h1b", "h1-b", "h 1b", "h‑1b",
+    "uscis", "green card",
+    "b1", "b2", "b1/b2", "f-1", "f1", "j-1", "j1",
+    "usa", "united states", "estados unidos", "eeuu", "ee.uu.",
   ];
-  return keywords.some(k => s.includes(k));
+  if (texts.some((s) => negatives.some((k) => s.includes(k)))) return false;
+  const spainMarkers = [
+    "españa", "boe", "boe.es", "extranjería", "nie", "tie",
+    "ministerio", "sede electrónica", "modelo ex", "arraigo", "cita previa",
+  ];
+  return texts.some((s) => spainMarkers.some((k) => s.includes(k)));
 }
 
 function logRouteMetrics(data: Record<string, unknown>) {
@@ -115,6 +87,7 @@ export async function POST(req: NextRequest) {
 
     const topScores = (hits ?? []).map(h => h?.score ?? 0).slice(0, 5);
     const topScore = topScores[0] ?? 0;
+    const inDomain = isInSpanishImmigrationDomainStrict(question, rewrittenQ);
     const route = hits.length > 0 ? "KB_ONLY" : (kbOnly ? "KB_EMPTY" : "WEB_FALLBACK");
 
     // optional source log line
@@ -131,6 +104,35 @@ export async function POST(req: NextRequest) {
       }));
     } catch {}
     // --------------------------------------------------------------------------------------
+
+    // Hard gate: if out-of-domain, immediately stream specialization message and return
+    if (!inDomain) {
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      (async () => {
+        await writer.write(sse(JSON.stringify({ delta: "Esta IA se especializa solo en temas de Inmigración a España." })));
+        const ms = Date.now() - t0;
+        await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms })));
+        await writer.write(sse(JSON.stringify({ done: true })));
+        await writer.close();
+      })();
+
+      const sseHeaders: Record<string, string> = {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-store, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+        "Access-Control-Expose-Headers":
+          "x-probe, x-rag-top-score, x-rag-topk, x-rag-min-score, x-route, x-domain",
+        "x-probe": "rag-sse-headers-2",
+        "x-rag-top-score": String(topScore),
+        "x-rag-topk": String(topK),
+        "x-rag-min-score": String(minScore),
+        "x-route": "SPECIALIZATION",
+        "x-domain": "out",
+      };
+      return new Response(readable, { status: 200, headers: sseHeaders });
+    }
 
     // Create our TransformStream AFTER computing hits so headers are ready
     const { readable, writable } = new TransformStream();
@@ -181,7 +183,12 @@ export async function POST(req: NextRequest) {
           }),
         );
       } else if (!kbOnly) {
-        const web = await webFallback(rewrittenQ, 4);
+        const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b/i.test(rewrittenQ);
+        const needFallback = hits.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile;
+        const boosted = isVolatile
+          ? `${rewrittenQ} España site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es`
+          : rewrittenQ;
+        const web = needFallback ? await webFallback(boosted, 4) : [];
         enriched = web.map((w, idx) => ({
           id: `web#${idx}`,
           score: 0,
@@ -205,9 +212,9 @@ export async function POST(req: NextRequest) {
       }));
       await writer.write(sse(JSON.stringify({ event: "sources", citations })));
 
-      // 5) If still empty and kbOnly=true → canonical message
-      if (enriched.length === 0) {
-        await writer.write(sse(JSON.stringify({ delta: "No consta en el contexto." })));
+      // 5) Out-of-domain hard gate: specialization message when no evidence
+      if (!inDomain && enriched.length === 0) {
+        await writer.write(sse(JSON.stringify({ delta: "Esta IA se especializa solo en temas de Inmigración a España." })));
         const ms = Date.now() - t0;
         await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms })));
         await writer.write(sse(JSON.stringify({ done: true })));
@@ -215,7 +222,20 @@ export async function POST(req: NextRequest) {
         return;
       }
 
-      // 6) Build context and stream LLM
+      // 6) If still empty and kbOnly=true → canonical message
+      if (enriched.length === 0) {
+        const hint = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b/i.test(rewrittenQ)
+          ? " No consta en el contexto. Intente con ‘tasas estudiante España 2025 BOE’."
+          : " No consta en el contexto.";
+        await writer.write(sse(JSON.stringify({ delta: hint.trimStart() })));
+        const ms = Date.now() - t0;
+        await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms })));
+        await writer.write(sse(JSON.stringify({ done: true })));
+        await writer.close();
+        return;
+      }
+
+      // 7) Build context and stream LLM
       const ctxBlocks = enriched
         .map((h, i) => {
           const loc = `${h.meta?.file ?? ""} [${h.meta?.start ?? ""}-${h.meta?.end ?? ""}]`;
@@ -302,12 +322,13 @@ export async function POST(req: NextRequest) {
       Connection: "keep-alive",
       "X-Accel-Buffering": "no",
       "Access-Control-Expose-Headers":
-        "x-probe, x-rag-top-score, x-rag-topk, x-rag-min-score, x-route",
+        "x-probe, x-rag-top-score, x-rag-topk, x-rag-min-score, x-route, x-domain",
       "x-probe": "rag-sse-headers-2",
       "x-rag-top-score": String(topScore),
       "x-rag-topk": String(topK),
       "x-rag-min-score": String(minScore),
       "x-route": route,
+      "x-domain": inDomain ? "in" : "out",
     };
 
     return new Response(readable, { status: 200, headers: sseHeaders });
