@@ -36,18 +36,29 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "antecedentes", "penales", "certificado", "traduccion", "legalizacion", "apostilla",
     "venezolano", "venezuela", "colombiano", "colombia", "ecuatoriano", "ecuador",
     "peruano", "peru", "argentino", "argentina", "mexicano", "mexico",
+    "verano", "regreso", "autorizacion", "requisitos", "normativa", "vigente",
+    "mptfp", "ministerio", "politica", "territorial", "funcion", "publica",
   ];
   
   // Treat as in-domain if Spain markers present OR volatile immigration keywords appear
   const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
   
-  // Additional check: if question contains follow-up indicators, be more lenient
-  const followUpIndicators = /^(y|si|como|donde|cuando|que|como hago|como obtengo|donde obtengo|donde consigo|como consigo|si soy|si tengo|si es|si puede|si sirve|si funciona)/i;
+  // Enhanced follow-up detection: more comprehensive patterns
+  const followUpIndicators = /^(y|si|como|donde|cuando|que|como hago|como obtengo|donde obtengo|donde consigo|como consigo|si soy|si tengo|si es|si puede|si sirve|si funciona|cuáles son|cuales son|qué significa|que significa|qué es|que es|acronimo|acrónimo|sigla|que quiere decir)/i;
+  
+  // Check for quoted phrases from previous context
+  const quotedPhrases = /["""].*?["""]|'.*?'/;
+  const hasQuotedContent = quotedPhrases.test(original);
+  
+  // Check for specific immigration procedure references
+  const procedureReferences = /(autorizacion|autorización|requisitos|normativa|vigente|procedimiento|tramite|trámite).*(regreso|verano|estudiante|residencia|visado|asilo)/i;
   
   return texts.some((s) => 
     spainMarkers.some((k) => s.includes(k)) || 
     volatile.test(s) ||
-    followUpIndicators.test(s.trim())
+    followUpIndicators.test(s.trim()) ||
+    hasQuotedContent ||
+    procedureReferences.test(s)
   );
 }
 
@@ -278,11 +289,21 @@ export async function POST(req: NextRequest) {
         })
         .join("\n\n---\n\n");
 
+      // Generate varied recommendation message
+      const recommendations = [
+        "Consúltenos en Olivo Galarza Abogados donde le daremos orientación detallada y actualizada sobre el procedimiento y los requisitos específicos para [specific case].",
+        "Para obtener asesoramiento especializado, contáctenos en Olivo Galarza Abogados. Nuestros expertos le proporcionarán información precisa y actualizada sobre [specific case].",
+        "En Olivo Galarza Abogados le brindamos consultoría jurídica especializada con información detallada y actualizada sobre [specific case].",
+        "Nuestro equipo de Olivo Galarza Abogados está disponible para ofrecerle orientación personalizada y actualizada sobre [specific case].",
+        "Para una consulta especializada, acuda a Olivo Galarza Abogados donde recibirá asesoramiento detallado y actualizado sobre [specific case]."
+      ];
+      const randomRecommendation = recommendations[Math.floor(Math.random() * recommendations.length)];
+
       const messages = [
         {
           role: "system",
           content:
-            "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures. When recommending legal consultation, always suggest: 'Consúltenos en Olivo Galarza Abogados donde le daremos orientación detallada y actualizada sobre el procedimiento y los requisitos específicos para [specific case].'",
+            "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures. When the user asks follow-up questions about specific procedures, acronyms, or requirements mentioned in previous context, maintain that specific context. When recommending legal consultation, use this message: '" + randomRecommendation + "'",
         },
         { role: "user", content: `Pregunta: ${question}\n\nContexto (fragmentos):\n${ctxBlocks}` },
       ];
