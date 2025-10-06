@@ -26,6 +26,7 @@ export default function RagChat() {
   const ctrlRef = useRef<AbortController | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const [reqInfo, setReqInfo] = useState<{ id?: string; ms?: number }>({});
+  const [routeBadge, setRouteBadge] = useState<string | null>(null);
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
 
@@ -133,7 +134,10 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
               behavior: "smooth",
             });
           },
-          onMetrics: (m: any) => setReqInfo((r) => ({ ...r, ms: m?.runtime_ms })),
+          onMetrics: (m: any) => {
+            setReqInfo((r) => ({ ...r, ms: m?.runtime_ms }));
+            if (typeof m?.route === "string") setRouteBadge(m.route);
+          },
           onError: (err: string) => {
             setAnswer((prev) =>
               prev ? prev + `\n\n[error: ${err}]` : `[error: ${err}]`
@@ -156,6 +160,15 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
   return (
     <div className="mx-auto max-w-3xl p-4 space-y-4">
       <h1 className="text-2xl font-semibold">KB Legal Assistant — RAG Stream</h1>
+          {routeBadge && (
+            <div className="text-xs inline-flex items-center gap-2 rounded-full border px-2 py-1">
+              <span className="opacity-60">Ruta</span>
+              <strong>{routeBadge}</strong>
+              {(routeBadge === "WEB_FALLBACK" || routeBadge === "GUIDANCE") ? (
+                <span className="ml-2 rounded-full bg-blue-50 px-2 py-[2px] text-blue-700 border border-blue-200">Consulta web</span>
+              ) : null}
+            </div>
+          )}
 
       {showDisclaimer && (
         <div className="rounded-2xl p-3 text-sm border shadow-sm">

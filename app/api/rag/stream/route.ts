@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     const topScore = topScores[0] ?? 0;
     const inDomain = isInSpanishImmigrationDomainStrict(question, rewrittenQ);
     const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i.test(rewrittenQ);
-    let route = "KB_ONLY" as "KB_ONLY" | "KB_EMPTY" | "WEB_FALLBACK" | "GUIDANCE";
+    let route = "KB_ONLY" as "KB_ONLY" | "KB_EMPTY" | "WEB_FALLBACK" | "GUIDANCE" | "SPECIALIZATION";
     if (hits.length > 0) route = "KB_ONLY";
     else if (kbOnly) route = "KB_EMPTY";
     else route = isVolatile ? "GUIDANCE" : "WEB_FALLBACK";
@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
         relPath?: string | null;
         url?: string | null;
       }> = [];
+      let actualRoute = route; // Track actual route used
 
       if (hits.length > 0) {
         enriched = await Promise.all(
@@ -209,6 +210,10 @@ export async function POST(req: NextRequest) {
           relPath: null,
           url: w.url ?? null,
         }));
+        // Update route to reflect web usage
+        if (enriched.length > 0) {
+          actualRoute = isVolatile ? "GUIDANCE" : "WEB_FALLBACK";
+        }
       }
 
       // 4) Emit sources early
@@ -258,7 +263,7 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "You are a Spanish legal assistant. Answer ONLY using the provided context blocks. If the context lacks the answer, reply exactly: 'No consta en el contexto.' Then stop.",
+            "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures.",
         },
         { role: "user", content: `Pregunta: ${question}\n\nContexto (fragmentos):\n${ctxBlocks}` },
       ];
@@ -311,7 +316,7 @@ export async function POST(req: NextRequest) {
       }
 
       const ms = Date.now() - t0;
-      await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms })));
+      await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms, route: actualRoute })));
       await writer.write(sse(JSON.stringify({ done: true })));
       await writer.close();
     })().catch(async (e) => {

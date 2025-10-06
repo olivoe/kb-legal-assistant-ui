@@ -49,6 +49,9 @@ export default function Home() {
               API base: <code>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code> ·
               <span style={{ marginLeft: 6 }}>BUILD: <code>{BUILD_TAG}</code></span>
             </div>
+            <div style={{ marginTop: 6, color: '#666', fontSize: 12 }}>
+              Sugerencias: prueba “Requisitos arraigo social”, “TIE estudiante renovación”, “tasas estudiante España 2025 BOE”.
+            </div>
           </div>
           <Ping />
         </div>

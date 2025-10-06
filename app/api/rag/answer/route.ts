@@ -209,7 +209,7 @@ export async function POST(req: NextRequest) {
       {
         role: "system",
         content:
-          "You are a Spanish legal assistant. Answer ONLY using the provided context blocks. If the context lacks the answer, reply exactly: 'No consta en el contexto.' Then stop.",
+          "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures.",
       },
       { role: "user", content: `Pregunta: ${question}\n\nContexto (fragmentos):\n${ctxBlocks}` },
     ];
