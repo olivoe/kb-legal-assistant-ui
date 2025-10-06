@@ -187,11 +187,18 @@ export async function POST(req: NextRequest) {
       } else if (!kbOnly) {
         const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b/i.test(rewrittenQ);
         const needFallback = hits.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile;
-        const boosted = isVolatile
-          ? `${rewrittenQ} España site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es`
-          : rewrittenQ;
-        const web = needFallback ? await webFallback(boosted, 4) : [];
-        enriched = web.map((w, idx) => ({
+        let web: Array<{ snippet: string; url: string }> = [];
+        if (needFallback) {
+          const primary = isVolatile
+            ? `${rewrittenQ} España tasas estudiante site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es`
+            : `${rewrittenQ} España`;
+          web = await webFallback(primary, 4);
+          if (!web || web.length === 0) {
+            const secondary = `${rewrittenQ} España tasas estudiantes site:universia.es OR site:europa.eu OR site:boe.es`;
+            web = await webFallback(secondary, 4);
+          }
+        }
+        enriched = (web || []).map((w, idx) => ({
           id: `web#${idx}`,
           score: 0,
           meta: { file: null, start: null, end: null },
@@ -224,14 +231,11 @@ export async function POST(req: NextRequest) {
         return;
       }
 
-      // 6) If still empty and kbOnly=true → canonical message
+      // 6) If still empty → guidance response
       if (enriched.length === 0) {
-        const hint = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b/i.test(rewrittenQ)
-          ? " No consta en el contexto. Intente con ‘tasas estudiante España 2025 BOE’."
-          : " No consta en el contexto.";
-        await writer.write(sse(JSON.stringify({ delta: hint.trimStart() })));
+        await writer.write(sse(JSON.stringify({ delta: "En el contexto de la Inmigración a España, ‘tasas estudiantes actualizadas’ puede referirse a: [A] tasas de visado de estudiante, [B] tasas de expedición/renovación de TIE para estudiantes, [C] tasas administrativas en sedes oficiales. Indica el contexto específico (tipo de trámite, organismo o año) para afinar la respuesta." })));
         const ms = Date.now() - t0;
-        await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms })));
+        await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms, route: "GUIDANCE" })));
         await writer.write(sse(JSON.stringify({ done: true })));
         await writer.close();
         return;

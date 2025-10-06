@@ -12,6 +12,9 @@ export const runtime = "nodejs";
 const CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL ?? "gpt-4.1-mini";
 
+const GUIDANCE_TEXT =
+  "En el contexto de la Inmigración a España, ‘tasas estudiantes actualizadas’ puede referirse a: [A] tasas de visado de estudiante, [B] tasas de expedición/renovación de TIE para estudiantes, [C] tasas administrativas en sedes oficiales. Indica el contexto específico (tipo de trámite, organismo o año) para afinar la respuesta.";
+
 async function safeText(r: Response) {
   try {
     return await r.text();
@@ -125,14 +128,17 @@ export async function POST(req: NextRequest) {
     const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|última|ultima/i.test(question);
     let webEnriched: EnrichedWebHit[] = [];
     const attemptedFallback = !kbOnly && (kbEnriched.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile);
+    let fallbackQueryUsed: string | null = null;
     if (attemptedFallback) {
       const primary = isVolatile
         ? `${question} España tasas estudiante site:boe.es OR site:exteriores.gob.es OR site:sepe.es OR site:inclusion.gob.es OR site:boe.es/boe`
         : `${question} España`;
+      fallbackQueryUsed = primary;
       let web = await webFallback(primary, 3);
       if (!web || web.length === 0) {
         const secondary = `${question} España tasas estudiantes site:universia.es OR site:europa.eu OR site:boe.es`;
         web = await webFallback(secondary, 3);
+        fallbackQueryUsed = secondary;
       }
       webEnriched = (web || [])
         .filter((w) => !!w.url)
@@ -169,26 +175,22 @@ export async function POST(req: NextRequest) {
     if (allEnriched.length === 0) {
       const ms = Date.now() - t0;
       logRouteMetrics({ reqId, inDomain, route: "unsure", topScore, topK, minScore, ms });
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          question,
-          answer: attemptedFallback
-            ? "No consta en el contexto. Intente con ‘tasas estudiante España 2025 BOE’."
-            : "No consta en el contexto.",
-          citations: [],
-          reqId,
-          runtime_ms: ms,
-        }),
-        {
-          status: 200,
-          headers: {
-            "content-type": "application/json",
-            "x-request-id": reqId,
-            "x-runtime-ms": String(ms),
-          },
-        }
-      );
+      const payload = {
+        ok: true,
+        question,
+        answer: GUIDANCE_TEXT,
+        citations: [],
+        reqId,
+        runtime_ms: ms,
+      };
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+        "x-request-id": reqId,
+        "x-runtime-ms": String(ms),
+        "x-route": "GUIDANCE",
+      };
+      if (fallbackQueryUsed) headers["x-fallback-query"] = fallbackQueryUsed;
+      return new Response(JSON.stringify(payload), { status: 200, headers });
     }
 
     // 6) Build context blocks (show source location or URL)
