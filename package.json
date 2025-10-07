@@ -8,15 +8,22 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "docx:txt": "node scripts/docx-to-txt.mjs"
+    "docx:txt": "node scripts/docx-to-txt.mjs",
+    "build-kb": "node scripts/build-kb-from-github.js",
+    "build-kb:dev": "node scripts/build-kb-from-github.js && npm run dev",
+    "deploy-kb": "node scripts/deploy-kb.js",
+    "fix-pdfs": "node scripts/fix-failed-pdfs.js",
+    "install-pdf-tools": "brew install poppler ghostscript tesseract"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.0",
     "@upstash/redis": "^1.35.4",
+    "dotenv": "^17.2.3",
+    "mammoth": "^1.6.0",
     "next": "^15.5.4",
     "pdfjs-dist": "^5.4.149",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "mammoth": "^1.6.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "20.14.11",

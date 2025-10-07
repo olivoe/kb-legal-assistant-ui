@@ -1,0 +1,343 @@
+#!/usr/bin/env node
+/**
+ * Complete KB Processing Pipeline
+ * Fetches files from GitHub → Extracts text → Generates embeddings → Creates index
+ * 
+ * Usage: node scripts/build-kb-from-github.js
+ */
+
+require('dotenv').config({ path: '.env.local' });
+const fs = require('fs').promises;
+const path = require('path');
+
+// Configuration
+const CONFIG = {
+  GITHUB_OWNER: process.env.GITHUB_OWNER,
+  GITHUB_REPO: process.env.GITHUB_REPO,
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  OUTPUT_DIR: path.join(process.cwd(), 'data', 'kb'),
+  EMBEDDING_MODEL: process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-small',
+  CHUNK_SIZE: 1000,
+  CHUNK_OVERLAP: 200
+};
+
+class KBPipeline {
+  constructor() {
+    this.documents = [];
+    this.embeddings = [];
+    this.chunks = [];
+  }
+
+  /**
+   * Fetch all documents from GitHub repository
+   */
+  async fetchFromGitHub() {
+    console.log('📡 Fetching documents from GitHub...');
+    
+    if (!CONFIG.GITHUB_TOKEN || !CONFIG.GITHUB_OWNER || !CONFIG.GITHUB_REPO) {
+      throw new Error('Missing GitHub configuration. Check your .env.local file.');
+    }
+
+    const response = await fetch(`https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents`, {
+      headers: {
+        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'KB-Legal-Assistant-Builder'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+    }
+
+    const files = await response.json();
+    const supportedExtensions = ['.pdf', '.txt', '.md', '.html'];
+    
+    // Recursively get all files
+    const allFiles = await this.getAllFilesRecursively(files);
+    
+    this.documents = allFiles.filter(file => {
+      const ext = path.extname(file.name).toLowerCase();
+      return supportedExtensions.includes(ext);
+    });
+
+    console.log(`✅ Found ${this.documents.length} documents in GitHub repository`);
+    return this.documents;
+  }
+
+  /**
+   * Recursively fetch all files from GitHub
+   */
+  async getAllFilesRecursively(files, basePath = '') {
+    const allFiles = [];
+    
+    for (const file of files) {
+      if (file.type === 'file') {
+        allFiles.push({
+          ...file,
+          fullPath: path.join(basePath, file.name)
+        });
+      } else if (file.type === 'dir') {
+        const dirResponse = await fetch(file.url, {
+          headers: {
+            'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'KB-Legal-Assistant-Builder'
+          }
+        });
+        
+        if (dirResponse.ok) {
+          const dirFiles = await dirResponse.json();
+          const subFiles = await this.getAllFilesRecursively(dirFiles, path.join(basePath, file.name));
+          allFiles.push(...subFiles);
+        }
+      }
+    }
+    
+    return allFiles;
+  }
+
+  /**
+   * Extract text content from files
+   */
+  async extractTextContent() {
+    console.log('📄 Extracting text content from documents...');
+    
+    for (const doc of this.documents) {
+      try {
+        const content = await this.getFileContent(doc);
+        if (content) {
+          doc.textContent = content;
+          console.log(`✅ Extracted text from: ${doc.fullPath}`);
+        } else {
+          console.log(`⚠️  No text content for: ${doc.fullPath}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error extracting text from ${doc.fullPath}:`, error.message);
+      }
+    }
+
+    const successfulExtractions = this.documents.filter(doc => doc.textContent);
+    console.log(`✅ Successfully extracted text from ${successfulExtractions.length}/${this.documents.length} documents`);
+  }
+
+  /**
+   * Get file content from GitHub
+   */
+  async getFileContent(file) {
+    const response = await fetch(file.download_url, {
+      headers: {
+        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+        'User-Agent': 'KB-Legal-Assistant-Builder'
+      }
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const buffer = await response.arrayBuffer();
+    const ext = path.extname(file.name).toLowerCase();
+
+    if (ext === '.pdf') {
+      return await this.extractTextFromPDF(buffer);
+    } else if (['.txt', '.md', '.html'].includes(ext)) {
+      return Buffer.from(buffer).toString('utf8');
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract text from PDF using pdfjs-dist
+   */
+  async extractTextFromPDF(buffer) {
+    try {
+      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      pdfjs.GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.mjs';
+      
+      const doc = await pdfjs.getDocument({ data: buffer }).promise;
+      let fullText = '';
+      
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
+      
+      return fullText.trim();
+    } catch (error) {
+      console.error('PDF extraction failed:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Split documents into chunks
+   */
+  chunkDocuments() {
+    console.log('✂️  Chunking documents...');
+    
+    this.chunks = [];
+    let chunkId = 0;
+
+    for (const doc of this.documents) {
+      if (!doc.textContent) continue;
+
+      const text = doc.textContent;
+      const words = text.split(/\s+/);
+      
+      for (let i = 0; i < words.length; i += CONFIG.CHUNK_SIZE - CONFIG.CHUNK_OVERLAP) {
+        const chunkWords = words.slice(i, i + CONFIG.CHUNK_SIZE);
+        const chunkText = chunkWords.join(' ').trim();
+        
+        if (chunkText.length > 0) {
+          this.chunks.push({
+            id: `chunk_${chunkId++}`,
+            file: doc.fullPath,
+            text: chunkText,
+            start: i,
+            end: i + chunkWords.length,
+            length: chunkText.length
+          });
+        }
+      }
+    }
+
+    console.log(`✅ Created ${this.chunks.length} chunks from ${this.documents.length} documents`);
+  }
+
+  /**
+   * Generate embeddings for all chunks
+   */
+  async generateEmbeddings() {
+    console.log('🧠 Generating embeddings...');
+    
+    if (!CONFIG.OPENAI_API_KEY) {
+      throw new Error('Missing OPENAI_API_KEY. Check your .env.local file.');
+    }
+
+    const embeddingPromises = this.chunks.map(async (chunk, index) => {
+      try {
+        const embedding = await this.getEmbedding(chunk.text);
+        console.log(`✅ Generated embedding ${index + 1}/${this.chunks.length}: ${chunk.id}`);
+        
+        return {
+          id: chunk.id,
+          file: chunk.file,
+          start: chunk.start,
+          end: chunk.end,
+          embedding: embedding
+        };
+      } catch (error) {
+        console.error(`❌ Error generating embedding for ${chunk.id}:`, error.message);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(embeddingPromises);
+    this.embeddings = results.filter(result => result !== null);
+
+    console.log(`✅ Generated ${this.embeddings.length} embeddings`);
+  }
+
+  /**
+   * Get embedding from OpenAI
+   */
+  async getEmbedding(text) {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: CONFIG.EMBEDDING_MODEL,
+        input: text
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  }
+
+  /**
+   * Save processed data to files
+   */
+  async saveProcessedData() {
+    console.log('💾 Saving processed data...');
+
+    // Ensure output directory exists
+    await fs.mkdir(CONFIG.OUTPUT_DIR, { recursive: true });
+
+    // Save embeddings
+    const embeddingsData = {
+      model: CONFIG.EMBEDDING_MODEL,
+      dims: this.embeddings[0]?.embedding?.length || 0,
+      items: this.embeddings
+    };
+
+    await fs.writeFile(
+      path.join(CONFIG.OUTPUT_DIR, 'embeddings.json'),
+      JSON.stringify(embeddingsData, null, 2)
+    );
+
+    // Copy to public directory for client access
+    await fs.writeFile(
+      path.join(process.cwd(), 'public', 'embeddings.json'),
+      JSON.stringify(embeddingsData, null, 2)
+    );
+
+    // Save document index
+    const documentIndex = this.documents.map(doc => doc.fullPath);
+    await fs.writeFile(
+      path.join(process.cwd(), 'public', 'kb_index.json'),
+      JSON.stringify(documentIndex, null, 2)
+    );
+
+    console.log('✅ Saved embeddings and index files');
+    console.log(`   📁 Embeddings: ${this.embeddings.length} items`);
+    console.log(`   📁 Documents: ${this.documents.length} files`);
+    console.log(`   📁 Chunks: ${this.chunks.length} chunks`);
+  }
+
+  /**
+   * Run the complete pipeline
+   */
+  async run() {
+    try {
+      console.log('🚀 Starting KB Processing Pipeline...\n');
+
+      await this.fetchFromGitHub();
+      await this.extractTextContent();
+      this.chunkDocuments();
+      await this.generateEmbeddings();
+      await this.saveProcessedData();
+
+      console.log('\n🎉 KB Processing Pipeline completed successfully!');
+      console.log(`\n📊 Summary:`);
+      console.log(`   📄 Documents processed: ${this.documents.length}`);
+      console.log(`   ✂️  Chunks created: ${this.chunks.length}`);
+      console.log(`   🧠 Embeddings generated: ${this.embeddings.length}`);
+      console.log(`   📁 Output saved to: ${CONFIG.OUTPUT_DIR}`);
+
+    } catch (error) {
+      console.error('\n❌ Pipeline failed:', error.message);
+      process.exit(1);
+    }
+  }
+}
+
+// Run the pipeline
+if (require.main === module) {
+  const pipeline = new KBPipeline();
+  pipeline.run();
+}
+
+module.exports = KBPipeline;

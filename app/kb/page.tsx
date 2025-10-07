@@ -17,7 +17,7 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     // Load KB index from the API
-    fetch('/api/kb/documents')
+    fetch('/api/kb/documents-github')
       .then(res => res.json())
       .then(data => {
         if (data.ok && data.documents) {
