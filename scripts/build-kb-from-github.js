@@ -10,11 +10,11 @@ require('dotenv').config({ path: '.env.local' });
 const fs = require('fs').promises;
 const path = require('path');
 
-// Configuration
+// Configuration (supports fallbacks for CI secrets)
 const CONFIG = {
-  GITHUB_OWNER: process.env.GITHUB_OWNER,
-  GITHUB_REPO: process.env.GITHUB_REPO,
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+  GITHUB_OWNER: process.env.GITHUB_OWNER || process.env.KB_REPO_OWNER,
+  GITHUB_REPO: process.env.GITHUB_REPO || process.env.KB_REPO_NAME,
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN || process.env.KB_REPO_TOKEN,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OUTPUT_DIR: path.join(process.cwd(), 'data', 'kb'),
   EMBEDDING_MODEL: process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-small',
@@ -35,17 +35,18 @@ class KBPipeline {
   async fetchFromGitHub() {
     console.log('📡 Fetching documents from GitHub...');
     
-    if (!CONFIG.GITHUB_TOKEN || !CONFIG.GITHUB_OWNER || !CONFIG.GITHUB_REPO) {
-      throw new Error('Missing GitHub configuration. Check your .env.local file.');
+    if (!CONFIG.GITHUB_OWNER || !CONFIG.GITHUB_REPO) {
+      throw new Error('Missing GitHub repository coordinates (owner/repo).');
     }
 
-    const response = await fetch(`https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents`, {
-      headers: {
-        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'KB-Legal-Assistant-Builder'
-      }
-    });
+    const rootUrl = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents`;
+    const headers = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'KB-Legal-Assistant-Builder'
+    };
+    if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
+
+    const response = await fetch(rootUrl, { headers });
 
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
@@ -79,13 +80,12 @@ class KBPipeline {
           fullPath: path.join(basePath, file.name)
         });
       } else if (file.type === 'dir') {
-        const dirResponse = await fetch(file.url, {
-          headers: {
-            'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'KB-Legal-Assistant-Builder'
-          }
-        });
+        const dirHeaders = {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'KB-Legal-Assistant-Builder'
+        };
+        if (CONFIG.GITHUB_TOKEN) dirHeaders['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
+        const dirResponse = await fetch(file.url, { headers: dirHeaders });
         
         if (dirResponse.ok) {
           const dirFiles = await dirResponse.json();
@@ -126,12 +126,9 @@ class KBPipeline {
    * Get file content from GitHub
    */
   async getFileContent(file) {
-    const response = await fetch(file.download_url, {
-      headers: {
-        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
-        'User-Agent': 'KB-Legal-Assistant-Builder'
-      }
-    });
+    const headers = { 'User-Agent': 'KB-Legal-Assistant-Builder' };
+    if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
+    const response = await fetch(file.download_url, { headers });
 
     if (!response.ok) {
       return null;
@@ -184,7 +181,11 @@ class KBPipeline {
     let chunkId = 0;
 
     for (const doc of this.documents) {
-      if (!doc.textContent) continue;
+      // Ensure we always have at least minimal content to embed so every document is represented
+      if (!doc.textContent || String(doc.textContent).trim().length < 10) {
+        const minimal = `Metadata only. File: ${doc.fullPath}`;
+        doc.textContent = minimal;
+      }
 
       const text = doc.textContent;
       const words = text.split(/\s+/);
