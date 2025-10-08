@@ -14,6 +14,8 @@
     "kb:sidecars": "node scripts/generate-pdf-sidecars.js",
     "kb:sidecars:test": "node scripts/generate-pdf-sidecars.js --limit 5",
     "kb:sidecars:check": "node scripts/generate-pdf-sidecars.js --check",
+    "kb:health": "node scripts/monitor-kb-health.js",
+    "kb:health:watch": "node scripts/monitor-kb-health.js --watch 5",
     "build-kb:dev": "node scripts/build-kb-from-github.js && npm run dev",
     "deploy-kb": "node scripts/deploy-kb.js",
     "fix-pdfs": "node scripts/fix-failed-pdfs.js",
