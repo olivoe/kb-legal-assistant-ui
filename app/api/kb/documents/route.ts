@@ -1,17 +1,17 @@
 // app/api/kb/documents/route.ts
 import { NextRequest } from "next/server";
-import { loadKB } from "@/lib/rag/kb";
+import fs from "fs/promises";
+import path from "path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const origin = req.nextUrl.origin;
-    const { items } = await loadKB(origin);
-    
-    // Extract unique document paths from KB items
-    const documents = Array.from(new Set(items.map(item => item.file)));
+    // Read from kb_index.json which contains ALL documents
+    const indexPath = path.join(process.cwd(), "public", "kb_index.json");
+    const indexContent = await fs.readFile(indexPath, "utf-8");
+    const documents = JSON.parse(indexContent);
     
     return new Response(JSON.stringify({ 
       ok: true, 
