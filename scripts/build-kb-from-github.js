@@ -213,34 +213,63 @@ class KBPipeline {
    * Generate embeddings for all chunks
    */
   async generateEmbeddings() {
-    console.log('🧠 Generating embeddings...');
-    
+    console.log('🧠 Generating embeddings with retries and limited concurrency...');
+
     if (!CONFIG.OPENAI_API_KEY) {
       throw new Error('Missing OPENAI_API_KEY. Check your .env.local file.');
     }
 
-    const embeddingPromises = this.chunks.map(async (chunk, index) => {
-      try {
-        const embedding = await this.getEmbedding(chunk.text);
-        console.log(`✅ Generated embedding ${index + 1}/${this.chunks.length}: ${chunk.id}`);
-        
-        return {
-          id: chunk.id,
-          file: chunk.file,
-          start: chunk.start,
-          end: chunk.end,
-          embedding: embedding
-        };
-      } catch (error) {
-        console.error(`❌ Error generating embedding for ${chunk.id}:`, error.message);
-        return null;
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    async function withRetry(fn, id, maxRetries = 5) {
+      let attempt = 0;
+      while (true) {
+        try {
+          return await fn();
+        } catch (err) {
+          attempt++;
+          const isRateLimit = /429|rate limit|Rate limit/i.test(String(err && err.message));
+          const isRetryable = isRateLimit || /5\d\d/.test(String(err && err.message));
+          if (attempt > maxRetries || !isRetryable) {
+            throw err;
+          }
+          const backoffMs = Math.min(30000, 500 * Math.pow(2, attempt)) + Math.floor(Math.random() * 250);
+          console.warn(`⏳ Retry ${attempt}/${maxRetries} for ${id} after ${backoffMs}ms due to: ${err.message}`);
+          await sleep(backoffMs);
+        }
       }
-    });
+    }
 
-    const results = await Promise.all(embeddingPromises);
-    this.embeddings = results.filter(result => result !== null);
+    const concurrency = 5;
+    const results = new Array(this.chunks.length);
+    let nextIndex = 0;
 
-    console.log(`✅ Generated ${this.embeddings.length} embeddings`);
+    const worker = async (workerId) => {
+      while (true) {
+        const i = nextIndex++;
+        if (i >= this.chunks.length) break;
+        const chunk = this.chunks[i];
+        try {
+          const embedding = await withRetry(() => this.getEmbedding(chunk.text), chunk.id);
+          results[i] = {
+            id: chunk.id,
+            file: chunk.file,
+            start: chunk.start,
+            end: chunk.end,
+            embedding
+          };
+          console.log(`✅ [w${workerId}] ${i + 1}/${this.chunks.length}: ${chunk.id}`);
+        } catch (error) {
+          console.error(`❌ [w${workerId}] ${i + 1}/${this.chunks.length} ${chunk.id}: ${error.message}`);
+          results[i] = null;
+        }
+      }
+    };
+
+    await Promise.all(Array.from({ length: concurrency }, (_, idx) => worker(idx + 1)));
+    this.embeddings = results.filter(Boolean);
+
+    console.log(`✅ Generated ${this.embeddings.length}/${this.chunks.length} embeddings`);
   }
 
   /**

@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "docx:txt": "node scripts/docx-to-txt.mjs",
     "build-kb": "node scripts/build-kb-from-github.js",
+    "kb:check": "node scripts/check-embedding-coverage.js",
     "build-kb:dev": "node scripts/build-kb-from-github.js && npm run dev",
     "deploy-kb": "node scripts/deploy-kb.js",
     "fix-pdfs": "node scripts/fix-failed-pdfs.js",

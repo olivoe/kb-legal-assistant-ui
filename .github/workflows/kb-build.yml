@@ -1,0 +1,52 @@
+name: Rebuild KB and Enforce Embedding Coverage
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [kb-updated]
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  build-kb:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build KB from GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.KB_REPO_TOKEN }}
+          GITHUB_OWNER: ${{ secrets.KB_REPO_OWNER }}
+          GITHUB_REPO: ${{ secrets.KB_REPO_NAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_EMBED_MODEL: text-embedding-3-small
+        run: npm run build-kb
+
+      - name: Check embedding coverage
+        run: npm run kb:check
+
+      - name: Commit changes
+        run: |
+          git config user.name "kb-bot"
+          git config user.email "kb-bot@users.noreply.github.com"
+          git add public/embeddings.json public/kb_index.json data/kb/embeddings.json data/kb/kb_index.json || true
+          if ! git diff --cached --quiet; then
+            git commit -m "CI: refresh embeddings and index"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+
