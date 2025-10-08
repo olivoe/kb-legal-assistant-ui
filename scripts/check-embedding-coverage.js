@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Check embedding coverage: ensures every document in kb_index.json
- * has a corresponding embedded text source (.txt/.md/.html)
+ * has at least one corresponding embedding entry (by file),
+ * or, for PDFs, a sidecar .txt is also acceptable.
  *
  * Strategy:
  * - For each path in kb_index.json:
