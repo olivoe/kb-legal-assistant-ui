@@ -11,10 +11,13 @@
     "docx:txt": "node scripts/docx-to-txt.mjs",
     "build-kb": "node scripts/build-kb-from-github.js",
     "kb:check": "node scripts/check-embedding-coverage.js",
+    "kb:sidecars": "node scripts/generate-pdf-sidecars.js",
+    "kb:sidecars:test": "node scripts/generate-pdf-sidecars.js --limit 5",
+    "kb:sidecars:check": "node scripts/generate-pdf-sidecars.js --check",
     "build-kb:dev": "node scripts/build-kb-from-github.js && npm run dev",
     "deploy-kb": "node scripts/deploy-kb.js",
     "fix-pdfs": "node scripts/fix-failed-pdfs.js",
-    "install-pdf-tools": "brew install poppler ghostscript tesseract"
+    "install-pdf-tools": "arch -arm64 brew install poppler ghostscript tesseract"
   },
   "dependencies": {
     "@octokit/rest": "^22.0.0",

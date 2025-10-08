@@ -9,6 +9,7 @@
 require('dotenv').config({ path: '.env.local' });
 const fs = require('fs').promises;
 const path = require('path');
+const { PDFExtractor } = require('./pdf-extractor');
 
 // Configuration (supports fallbacks for CI secrets)
 const CONFIG = {
@@ -27,6 +28,8 @@ class KBPipeline {
     this.documents = [];
     this.embeddings = [];
     this.chunks = [];
+    this.pdfExtractor = new PDFExtractor({ preferSidecars: true, verbose: false });
+    this.allFiles = new Map(); // Store all files for sidecar lookup
   }
 
   /**
@@ -71,6 +74,11 @@ class KBPipeline {
         download_url: `https://raw.githubusercontent.com/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/main/${entry.path}`,
         type: 'file'
       }));
+
+    // Store all files for sidecar lookup
+    allFiles.forEach(file => {
+      this.allFiles.set(file.fullPath, file);
+    });
 
     this.documents = allFiles.filter(file => supportedExtensions.includes(path.extname(file.name).toLowerCase()));
     console.log(`✅ Found ${this.documents.length} documents in GitHub repository`);
@@ -140,27 +148,60 @@ class KBPipeline {
   }
 
   /**
-   * Get file content from GitHub
+   * Get file content from GitHub with sidecar support
    */
   async getFileContent(file) {
     const headers = { 'User-Agent': 'KB-Legal-Assistant-Builder' };
     if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
-    let response = await fetch(file.download_url, { headers });
-    if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
-      const fallbackHeaders = { 'User-Agent': 'KB-Legal-Assistant-Builder' };
-      response = await fetch(file.download_url, { headers: fallbackHeaders });
-    }
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const buffer = await response.arrayBuffer();
+    
     const ext = path.extname(file.name).toLowerCase();
 
+    // For PDFs, try sidecar first, then multi-method extraction
     if (ext === '.pdf') {
-      return await this.extractTextFromPDF(buffer);
-    } else if (['.txt', '.md', '.html'].includes(ext)) {
+      // Check if .txt sidecar exists
+      const txtPath = file.fullPath.replace(/\.pdf$/i, '.txt');
+      const sidecarFile = this.allFiles.get(txtPath);
+      
+      if (sidecarFile) {
+        console.log(`  📄 Using sidecar: ${txtPath}`);
+        try {
+          let response = await fetch(sidecarFile.download_url, { headers });
+          if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
+            response = await fetch(sidecarFile.download_url, { headers: { 'User-Agent': 'KB-Legal-Assistant-Builder' } });
+          }
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            return Buffer.from(buffer).toString('utf8');
+          }
+        } catch (error) {
+          console.log(`  ⚠️  Sidecar fetch failed: ${error.message}`);
+        }
+      }
+      
+      // No sidecar or sidecar failed, use multi-method extraction
+      console.log(`  🔧 Extracting from PDF: ${file.fullPath}`);
+      let response = await fetch(file.download_url, { headers });
+      if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
+        response = await fetch(file.download_url, { headers: { 'User-Agent': 'KB-Legal-Assistant-Builder' } });
+      }
+      if (!response.ok) {
+        return null;
+      }
+      const buffer = await response.arrayBuffer();
+      const result = await this.pdfExtractor.extract(Buffer.from(buffer));
+      return result.text || null;
+    }
+    
+    // For text files, fetch directly
+    if (['.txt', '.md', '.html'].includes(ext)) {
+      let response = await fetch(file.download_url, { headers });
+      if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
+        response = await fetch(file.download_url, { headers: { 'User-Agent': 'KB-Legal-Assistant-Builder' } });
+      }
+      if (!response.ok) {
+        return null;
+      }
+      const buffer = await response.arrayBuffer();
       return Buffer.from(buffer).toString('utf8');
     }
 
@@ -168,28 +209,12 @@ class KBPipeline {
   }
 
   /**
-   * Extract text from PDF using pdfjs-dist
+   * Extract text from PDF using pdfjs-dist (legacy method, now using PDFExtractor)
+   * Kept for backward compatibility but not used
    */
   async extractTextFromPDF(buffer) {
-    try {
-      const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-      pdfjs.GlobalWorkerOptions.workerSrc = 'pdfjs-dist/legacy/build/pdf.worker.mjs';
-      
-      const doc = await pdfjs.getDocument({ data: buffer }).promise;
-      let fullText = '';
-      
-      for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map(item => item.str).join(' ');
-        fullText += pageText + '\n';
-      }
-      
-      return fullText.trim();
-    } catch (error) {
-      console.error('PDF extraction failed:', error.message);
-      return null;
-    }
+    const result = await this.pdfExtractor.extract(buffer);
+    return result.text || null;
   }
 
   /**
