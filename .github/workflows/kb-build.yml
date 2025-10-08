@@ -29,11 +29,27 @@ jobs:
       - name: Install deps
         run: npm ci
 
+      - name: Preflight GitHub token access
+        env:
+          GITHUB_TOKEN: ${{ secrets.KB_REPO_TOKEN }}
+          GITHUB_OWNER: olivoe
+          GITHUB_REPO: kb-legal-documents
+        run: |
+          set -e
+          echo "Checking access to https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO)
+          echo "Authenticated HEAD returned: $code"
+          if [ "$code" != "200" ]; then
+            echo "Token may not have access; attempting unauthenticated check (repo must be public)."
+            code2=$(curl -sS -o /dev/null -w '%{http_code}' -H "Accept: application/vnd.github+json" https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO)
+            echo "Unauthenticated HEAD returned: $code2"
+          fi
+
       - name: Build KB from GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.KB_REPO_TOKEN }}
-          GITHUB_OWNER: ${{ secrets.KB_REPO_OWNER }}
-          GITHUB_REPO: ${{ secrets.KB_REPO_NAME }}
+          GITHUB_OWNER: olivoe
+          GITHUB_REPO: kb-legal-documents
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_EMBED_MODEL: text-embedding-3-small
         run: npm run build-kb
@@ -54,24 +70,23 @@ jobs:
           git remote set-url origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
 
       - name: Commit changes (with fetch/pull and retry)
-        continue-on-error: true
         env:
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
+          set +e
           git config user.name "kb-bot"
           git config user.email "kb-bot@users.noreply.github.com"
           git config pull.ff only
-          git fetch origin "$BRANCH_NAME"
-          git checkout "$BRANCH_NAME"
-          git pull --ff-only origin "$BRANCH_NAME" || true
-          git add public/embeddings.json public/kb_index.json data/kb/embeddings.json data/kb/kb_index.json || true
-          if git diff --cached --quiet; then echo "No changes to commit"; exit 0; fi
-          git commit -m "CI: refresh embeddings and index" || true
-          set +e
-          git push origin "HEAD:$BRANCH_NAME"
+          git fetch origin "$BRANCH_NAME" 2>&1 || echo "fetch failed (non-fatal)"
+          git checkout "$BRANCH_NAME" 2>&1 || echo "checkout failed (non-fatal)"
+          git pull --ff-only origin "$BRANCH_NAME" 2>&1 || echo "pull failed (non-fatal)"
+          git add public/embeddings.json public/kb_index.json data/kb/embeddings.json data/kb/kb_index.json 2>&1 || echo "add failed (non-fatal)"
+          if git diff --cached --quiet; then echo "No changes to commit"; echo "push_exit=0" >> $GITHUB_OUTPUT; exit 0; fi
+          git commit -m "CI: refresh embeddings and index" 2>&1 || echo "commit failed (non-fatal)"
+          git push origin "HEAD:$BRANCH_NAME" 2>&1
           PUSH_EXIT=$?
-          set -e
           echo "push_exit=$PUSH_EXIT" >> $GITHUB_OUTPUT
+          exit 0
         id: commit_push
 
       - name: Create PR when direct push fails
