@@ -17,7 +17,7 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     // Load KB index from the API
-    fetch('/api/kb/documents-github')
+    fetch(`/api/kb/documents?ts=${Date.now()}`, { cache: 'no-store', headers: { 'cache-control': 'no-store' } })
       .then(res => res.json())
       .then(data => {
         if (data.ok && data.documents) {
