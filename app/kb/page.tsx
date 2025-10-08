@@ -46,10 +46,13 @@ export default function KnowledgeBasePage() {
                 Array.isArray(embData.items) ? embData.items.map((it: any) => String(it.file || '')) : []
               );
               const count = processedDocs.reduce((acc: number, doc: Document) => {
-                const lookup = doc.path.toLowerCase().endsWith('.pdf')
-                  ? doc.path.replace(/\.pdf$/i, '.txt')
-                  : doc.path;
-                return embeddedFiles.has(lookup) ? acc + 1 : acc;
+                const candidates = [
+                  doc.path,
+                  doc.path.replace(/\.pdf$/i, '.txt'),
+                  doc.path.replace(/\.txt$/i, '.pdf')
+                ];
+                const covered = candidates.some((c) => embeddedFiles.has(c));
+                return covered ? acc + 1 : acc;
               }, 0);
               setEmbeddedCount(count);
             }
