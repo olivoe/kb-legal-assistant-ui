@@ -48,6 +48,10 @@ jobs:
           if [ -z "$DEPLOY_HOOK_URL" ]; then echo "No deploy hook set"; exit 0; fi
           curl -s -X POST "$DEPLOY_HOOK_URL" -H "Content-Type: application/json" -d '{"force":true}'
 
+      - name: Ensure authenticated remote
+        run: |
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
       - name: Commit changes (with fetch/pull and retry)
         env:
           BRANCH_NAME: ${{ github.ref_name }}
@@ -59,16 +63,30 @@ jobs:
           git checkout "$BRANCH_NAME"
           git pull --ff-only origin "$BRANCH_NAME" || true
           git add public/embeddings.json public/kb_index.json data/kb/embeddings.json data/kb/kb_index.json || true
-          if ! git diff --cached --quiet; then
-            git commit -m "CI: refresh embeddings and index"
-            git push origin "HEAD:$BRANCH_NAME" || (
-              echo "First push failed; attempting rebase and retry..." && \
-              git fetch origin "$BRANCH_NAME" && \
-              git rebase origin/"$BRANCH_NAME" && \
-              git push origin "HEAD:$BRANCH_NAME"
-            )
-          else
-            echo "No changes to commit"
-          fi
+          if git diff --cached --quiet; then echo "No changes to commit"; exit 0; fi
+          git commit -m "CI: refresh embeddings and index" || true
+          set +e
+          git push origin "HEAD:$BRANCH_NAME"
+          PUSH_EXIT=$?
+          set -e
+          echo "push_exit=$PUSH_EXIT" >> $GITHUB_OUTPUT
+        id: commit_push
+
+      - name: Create PR when direct push fails
+        if: steps.commit_push.outputs.push_exit != '0'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "CI: refresh embeddings and index"
+          branch: kb/artifacts-${{ github.run_id }}
+          title: "CI: Refresh embeddings and index"
+          body: |
+            Automated artifacts update from KB build.
+            This PR was created because a direct push to `${{ github.ref_name }}` failed (likely due to branch protection or race conditions).
+          add-paths: |
+            public/embeddings.json
+            public/kb_index.json
+            data/kb/embeddings.json
+            data/kb/kb_index.json
 
 
