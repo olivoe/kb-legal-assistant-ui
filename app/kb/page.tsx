@@ -14,19 +14,20 @@ export default function KnowledgeBasePage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [embeddedCount, setEmbeddedCount] = useState(0);
 
   useEffect(() => {
     // Load KB index from the API
     fetch(`/api/kb/documents?ts=${Date.now()}`, { cache: 'no-store', headers: { 'cache-control': 'no-store' } })
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         if (data.ok && data.documents) {
           const processedDocs = data.documents.map((path: string) => {
             const parts = path.split('/');
             const filename = parts[parts.length - 1];
             const category = parts.length > 1 ? parts[0] : 'Other';
             const displayName = filename.replace(/\.pdf$/, '').replace(/\.txt$/, '');
-            
+
             return {
               path,
               category,
@@ -35,6 +36,26 @@ export default function KnowledgeBasePage() {
             };
           });
           setDocuments(processedDocs);
+
+          // Fetch embeddings to compute coverage badge (embedded vs total)
+          try {
+            const embRes = await fetch(`/embeddings.json?ts=${Date.now()}`, { cache: 'no-store', headers: { 'cache-control': 'no-store' } });
+            if (embRes.ok) {
+              const embData = await embRes.json();
+              const embeddedFiles: Set<string> = new Set(
+                Array.isArray(embData.items) ? embData.items.map((it: any) => String(it.file || '')) : []
+              );
+              const count = processedDocs.reduce((acc: number, doc: Document) => {
+                const lookup = doc.path.toLowerCase().endsWith('.pdf')
+                  ? doc.path.replace(/\.pdf$/i, '.txt')
+                  : doc.path;
+                return embeddedFiles.has(lookup) ? acc + 1 : acc;
+              }, 0);
+              setEmbeddedCount(count);
+            }
+          } catch (_e) {
+            // ignore coverage badge errors
+          }
         }
       })
       .catch(err => {
@@ -126,8 +147,11 @@ export default function KnowledgeBasePage() {
               <p className="text-gray-600 mb-3">
                 Documentos de Inmigración a España
               </p>
-              <div className="text-sm text-gray-500">
-                {documents.length} documentos disponibles
+              <div className="text-sm text-gray-500" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>{documents.length} documentos totales</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                  {embeddedCount} con embeddings
+                </span>
               </div>
             </div>
             <a 
