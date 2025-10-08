@@ -46,7 +46,15 @@ class KBPipeline {
     };
     if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
 
-    const response = await fetch(rootUrl, { headers });
+    let response = await fetch(rootUrl, { headers });
+    if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
+      console.warn('GitHub auth failed with provided token; retrying without token (public repo fallback)');
+      const fallbackHeaders = {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'KB-Legal-Assistant-Builder'
+      };
+      response = await fetch(rootUrl, { headers: fallbackHeaders });
+    }
 
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
@@ -85,7 +93,14 @@ class KBPipeline {
           'User-Agent': 'KB-Legal-Assistant-Builder'
         };
         if (CONFIG.GITHUB_TOKEN) dirHeaders['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
-        const dirResponse = await fetch(file.url, { headers: dirHeaders });
+        let dirResponse = await fetch(file.url, { headers: dirHeaders });
+        if (!dirResponse.ok && (dirResponse.status === 401 || dirResponse.status === 403) && CONFIG.GITHUB_TOKEN) {
+          const fallbackDirHeaders = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'KB-Legal-Assistant-Builder'
+          };
+          dirResponse = await fetch(file.url, { headers: fallbackDirHeaders });
+        }
         
         if (dirResponse.ok) {
           const dirFiles = await dirResponse.json();
@@ -128,7 +143,11 @@ class KBPipeline {
   async getFileContent(file) {
     const headers = { 'User-Agent': 'KB-Legal-Assistant-Builder' };
     if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
-    const response = await fetch(file.download_url, { headers });
+    let response = await fetch(file.download_url, { headers });
+    if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
+      const fallbackHeaders = { 'User-Agent': 'KB-Legal-Assistant-Builder' };
+      response = await fetch(file.download_url, { headers: fallbackHeaders });
+    }
 
     if (!response.ok) {
       return null;
