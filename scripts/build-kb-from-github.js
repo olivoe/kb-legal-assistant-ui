@@ -44,7 +44,7 @@ class KBPipeline {
       'Accept': 'application/vnd.github.v3+json',
       'User-Agent': 'KB-Legal-Assistant-Builder'
     };
-    if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${CONFIG.GITHUB_TOKEN}`;
+    if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
 
     let response = await fetch(rootUrl, { headers });
     if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
@@ -92,7 +92,7 @@ class KBPipeline {
           'Accept': 'application/vnd.github.v3+json',
           'User-Agent': 'KB-Legal-Assistant-Builder'
         };
-        if (CONFIG.GITHUB_TOKEN) dirHeaders['Authorization'] = `Bearer ${CONFIG.GITHUB_TOKEN}`;
+        if (CONFIG.GITHUB_TOKEN) dirHeaders['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
         let dirResponse = await fetch(file.url, { headers: dirHeaders });
         if (!dirResponse.ok && (dirResponse.status === 401 || dirResponse.status === 403) && CONFIG.GITHUB_TOKEN) {
           const fallbackDirHeaders = {
@@ -142,7 +142,7 @@ class KBPipeline {
    */
   async getFileContent(file) {
     const headers = { 'User-Agent': 'KB-Legal-Assistant-Builder' };
-    if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${CONFIG.GITHUB_TOKEN}`;
+    if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
     let response = await fetch(file.download_url, { headers });
     if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
       const fallbackHeaders = { 'User-Agent': 'KB-Legal-Assistant-Builder' };

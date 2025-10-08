@@ -37,7 +37,7 @@ jobs:
         run: |
           set -e
           echo "Checking access to https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO"
-          code=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO)
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO)
           echo "Authenticated HEAD returned: $code"
           if [ "$code" != "200" ]; then
             echo "Token may not have access; attempting unauthenticated check (repo must be public)."
