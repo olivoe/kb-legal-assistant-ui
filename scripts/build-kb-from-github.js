@@ -39,38 +39,40 @@ class KBPipeline {
       throw new Error('Missing GitHub repository coordinates (owner/repo).');
     }
 
-    const rootUrl = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/contents`;
+    // Use Git Trees API (recursive) to avoid rate limits from per-directory listing
+    const treeUrl = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/git/trees/main?recursive=1`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
       'User-Agent': 'KB-Legal-Assistant-Builder'
     };
     if (CONFIG.GITHUB_TOKEN) headers['Authorization'] = `token ${CONFIG.GITHUB_TOKEN}`;
 
-    let response = await fetch(rootUrl, { headers });
+    let response = await fetch(treeUrl, { headers });
     if (!response.ok && (response.status === 401 || response.status === 403) && CONFIG.GITHUB_TOKEN) {
       console.warn('GitHub auth failed with provided token; retrying without token (public repo fallback)');
       const fallbackHeaders = {
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'KB-Legal-Assistant-Builder'
       };
-      response = await fetch(rootUrl, { headers: fallbackHeaders });
+      response = await fetch(treeUrl, { headers: fallbackHeaders });
     }
-
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
     }
-
-    const files = await response.json();
+    const data = await response.json();
     const supportedExtensions = ['.pdf', '.txt', '.md', '.html'];
-    
-    // Recursively get all files
-    const allFiles = await this.getAllFilesRecursively(files);
-    
-    this.documents = allFiles.filter(file => {
-      const ext = path.extname(file.name).toLowerCase();
-      return supportedExtensions.includes(ext);
-    });
+    const allFiles = (data.tree || [])
+      .filter(entry => entry.type === 'blob')
+      .map(entry => ({
+        name: path.basename(entry.path),
+        path: entry.path,
+        fullPath: entry.path,
+        // construct raw URL against main branch
+        download_url: `https://raw.githubusercontent.com/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}/main/${entry.path}`,
+        type: 'file'
+      }));
 
+    this.documents = allFiles.filter(file => supportedExtensions.includes(path.extname(file.name).toLowerCase()));
     console.log(`✅ Found ${this.documents.length} documents in GitHub repository`);
     return this.documents;
   }
