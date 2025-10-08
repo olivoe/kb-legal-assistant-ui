@@ -47,17 +47,18 @@ function main() {
     (embeddings.items || []).map((it) => normalize(String(it.file || '')))
   );
 
-  const requiredSources = index.map((docPath) => {
+  const requiredCandidates = index.map((docPath) => {
     const p = normalize(String(docPath));
-    if (/\.pdf$/i.test(p)) return pdfToTxt(p);
-    return p;
+    if (/\.pdf$/i.test(p)) return [pdfToTxt(p), p];
+    return [p];
   });
 
   const missing = [];
-  for (const src of requiredSources) {
-    // Only enforce for textual sources
-    if (/\.(txt|md|html)$/i.test(src)) {
-      if (!embeddedFiles.has(normalize(src))) missing.push(src);
+  for (const candidates of requiredCandidates) {
+    const covered = candidates.some((c) => embeddedFiles.has(normalize(c)));
+    if (!covered) {
+      // prefer reporting the first candidate
+      missing.push(candidates[0]);
     }
   }
 

@@ -37,6 +37,14 @@ jobs:
       - name: Check embedding coverage
         run: npm run kb:check
 
+      - name: Trigger Vercel prod deploy (auto-promote)
+        if: success()
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_PROD_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then echo "No deploy hook set"; exit 0; fi
+          curl -s -X POST "$DEPLOY_HOOK_URL" -H "Content-Type: application/json" -d '{"force":true}'
+
       - name: Commit changes
         run: |
           git config user.name "kb-bot"
