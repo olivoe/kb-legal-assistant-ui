@@ -30,6 +30,7 @@ export default function RagChat() {
   const [kbOnly, setKbOnly] = useState(true);
   const ctrlRef = useRef<AbortController | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
+  const answerAccumulator = useRef<string>("");
   const [reqInfo, setReqInfo] = useState<{ id?: string; ms?: number }>({});
   const [routeBadge, setRouteBadge] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
@@ -131,20 +132,22 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
     setAnswer("");
     setSources([]);
     setReqInfo({});
+    answerAccumulator.current = ""; // Reset accumulator
 
     // create/replace controller
     ctrlRef.current?.abort();
     ctrlRef.current = new AbortController();
-
-    let finalAnswer = "";
 
     try {
       await readRagStream(
         api("/api/rag/stream"),
         { question: currentQuestion, topK, minScore, kbOnly, conversationHistory },
         {
-          onInit: () => {},
+          onInit: () => {
+            console.log("[RagChat] Stream initialized");
+          },
           onMeta: (m: any) => {
+            console.log("[RagChat] Meta received:", m);
             setReqInfo({ id: m?.reqId });
 
             // One-time disclaimer hook (stream) — will activate once server emits it in meta
@@ -153,8 +156,26 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
               sessionStorage.setItem(disclaimerKey, "1");
             }
           },
+          onSources: (payload: any) => {
+            console.log("[RagChat] Sources received:", payload);
+            if (Array.isArray(payload.citations)) {
+              setSources(
+                payload.citations.map((c: any) => ({
+                  id: c.id,
+                  score: c.score,
+                  file: c.file ?? null,
+                  start: c.start ?? null,
+                  end: c.end ?? null,
+                  snippet: c.snippet ?? "",
+                  relPath: c.relPath ?? null,
+                  url: c.url ?? null,
+                }))
+              );
+            }
+          },
           onDelta: (d: string) => {
-            finalAnswer += d;
+            console.log("[RagChat] Delta received:", d.slice(0, 50));
+            answerAccumulator.current += d;
             setAnswer((prev) => prev + d);
             areaRef.current?.scrollTo({
               top: areaRef.current.scrollHeight,
@@ -162,26 +183,31 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
             });
           },
           onMetrics: (m: any) => {
+            console.log("[RagChat] Metrics received:", m);
             setReqInfo((r) => ({ ...r, ms: m?.runtime_ms }));
             if (typeof m?.route === "string") {
-              console.log("[ROUTE DEBUG]", m.route);
               setRouteBadge(m.route);
             }
           },
           onError: (err: string) => {
+            console.error("[RagChat] Error:", err);
             const errorMsg = `\n\n[error: ${err}]`;
-            finalAnswer += errorMsg;
+            answerAccumulator.current += errorMsg;
             setAnswer((prev) =>
               prev ? prev + errorMsg : `[error: ${err}]`
             );
           },
           onDone: () => {
+            console.log("[RagChat] Stream done. Final answer length:", answerAccumulator.current.length);
             // Update conversation history when stream completes
-            setConversationHistory(prev => [
-              ...prev,
-              { role: "user", content: currentQuestion },
-              { role: "assistant", content: finalAnswer }
-            ]);
+            const finalAnswer = answerAccumulator.current;
+            if (finalAnswer.trim()) {
+              setConversationHistory(prev => [
+                ...prev,
+                { role: "user", content: currentQuestion },
+                { role: "assistant", content: finalAnswer }
+              ]);
+            }
             setLoading(false);
             setQ(""); // Clear input after sending
           },
@@ -189,10 +215,10 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
         { signal: ctrlRef.current.signal }
       );
     } catch (e: any) {
+      console.error("[RagChat] Stream error:", e);
       if (e?.name !== "AbortError") {
-        setAnswer((prev) =>
-          prev ? prev + `\n\n[error: ${e.message}]` : `[error: ${e.message}]`
-        );
+        const errorMsg = `[error: ${e.message}]`;
+        setAnswer(errorMsg);
         setLoading(false);
       }
     }
