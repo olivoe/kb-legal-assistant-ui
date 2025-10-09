@@ -13,7 +13,13 @@ export type SSEHandlers = {
 
 export async function readRagStream(
     endpoint: string,
-    body: { question: string; topK?: number; minScore?: number; kbOnly?: boolean },
+    body: { 
+      question: string; 
+      topK?: number; 
+      minScore?: number; 
+      kbOnly?: boolean;
+      conversationHistory?: Array<{role: "user" | "assistant", content: string}>;
+    },
     handlers: SSEHandlers,
     opts?: { signal?: AbortSignal } // ← NEW
   ) {
