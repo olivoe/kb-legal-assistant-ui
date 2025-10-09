@@ -79,7 +79,8 @@ export async function POST(req: NextRequest) {
   const t0 = Date.now();
 
   try {
-    const { question, topK = 6, minScore = 0.25, kbOnly = true } = await req.json();
+    // Adjusted defaults: topK=8 for more context, minScore=0.30 for better quality
+    const { question, topK = 8, minScore = 0.30, kbOnly = true, conversationHistory = [] } = await req.json();
     const rewrittenQ = rewriteEs(question);
 
     if (!process.env.OPENAI_API_KEY) {
@@ -220,7 +221,8 @@ export async function POST(req: NextRequest) {
           }),
         );
       } else if (!kbOnly) {
-        const needFallback = hits.length === 0 || topScore < Math.max(minScore, 0.65) || isVolatile;
+        // Use stricter threshold (0.70) for web fallback to ensure quality
+        const needFallback = hits.length === 0 || topScore < 0.70 || isVolatile;
         let web: Array<{ snippet: string; url: string }> = [];
         if (needFallback) {
           const primary = isVolatile
@@ -284,28 +286,54 @@ export async function POST(req: NextRequest) {
       const ctxBlocks = enriched
         .map((h, i) => {
           const loc = `${h.meta?.file ?? ""} [${h.meta?.start ?? ""}-${h.meta?.end ?? ""}]`;
-          const snip = (h.snippet ?? "").slice(0, 700);
+          const snip = (h.snippet ?? "").slice(0, 1000);
           return `#${i + 1} ${loc}\n${snip}`;
         })
         .join("\n\n---\n\n");
 
-      // Generate varied recommendation message
-      const recommendations = [
-        "Consúltenos en Olivo Galarza Abogados donde le daremos orientación detallada y actualizada sobre el procedimiento y los requisitos específicos para [specific case].",
-        "Para obtener asesoramiento especializado, contáctenos en Olivo Galarza Abogados. Nuestros expertos le proporcionarán información precisa y actualizada sobre [specific case].",
-        "En Olivo Galarza Abogados le brindamos consultoría jurídica especializada con información detallada y actualizada sobre [specific case].",
-        "Nuestro equipo de Olivo Galarza Abogados está disponible para ofrecerle orientación personalizada y actualizada sobre [specific case].",
-        "Para una consulta especializada, acuda a Olivo Galarza Abogados donde recibirá asesoramiento detallado y actualizado sobre [specific case]."
-      ];
-      const randomRecommendation = recommendations[Math.floor(Math.random() * recommendations.length)];
+      // Build message array with conversation history
+      const systemMessage = {
+        role: "system" as const,
+        content: `Eres un asistente legal especializado en Derecho de Inmigración Español. Sigue estas reglas estrictamente:
+
+DIRECTRICES DE RESPUESTA:
+1. SOLO usa la información de los fragmentos de contexto proporcionados
+2. Si la información no está en el contexto, indícalo claramente en lugar de inventar
+3. Cita los documentos específicos cuando los menciones (ej: "Según BOE-A-2022-xxx..." o "De acuerdo con la Instrucción DGI...")
+4. Estructura tus respuestas de manera clara con puntos cuando sea apropiado
+5. Usa lenguaje profesional pero accesible en español
+
+MANEJO DE INFORMACIÓN INCOMPLETA:
+- Si el contexto no contiene información específica sobre fechas, tasas actualizadas, o procedimientos vigentes, indica: "La información específica sobre [tema] requiere verificación actualizada"
+- Para preguntas sobre plazos o requisitos específicos, cita la fuente del documento
+- Si hay información contradictoria, menciona ambas fuentes
+
+RECOMENDACIONES PROFESIONALES:
+- Cuando la consulta requiera asesoramiento personalizado o actualización de datos específicos, sugiere: "Para obtener asesoramiento personalizado y actualizado sobre su caso particular, le recomendamos contactar con Olivo Galarza Abogados"
+- NO inventes datos, fechas, o cantidades que no estén en el contexto
+
+ACRONIMOS Y TÉRMINOS:
+- Al mencionar acronimos por primera vez, proporciona su significado completo (ej: "TIE (Tarjeta de Identidad de Extranjero)")
+- Explica términos técnicos de manera accesible
+
+FORMATO DE CITAS:
+- Referencia los documentos del contexto cuando proporciones información específica
+- Si mencionas normativa, indica el documento exacto del contexto que lo respalda
+
+CONVERSACIÓN:
+- Si hay un historial de conversación previo, úsalo para entender el contexto de preguntas de seguimiento
+- Las preguntas breves como "¿y eso qué es?" o "¿cuánto cuesta?" pueden referirse a temas de la conversación previa`,
+      };
+
+      // Include conversation history (limit to last 4 exchanges to avoid token overflow)
+      const recentHistory = Array.isArray(conversationHistory) 
+        ? conversationHistory.slice(-8) // Last 4 Q&A pairs (8 messages)
+        : [];
 
       const messages = [
-        {
-          role: "system",
-          content:
-            "You are a Spanish legal assistant specializing in Spanish Immigration Law. Answer ONLY using the provided context blocks. Provide helpful, accurate information based on the context. If the context doesn't contain specific information, provide general guidance about Spanish immigration procedures. When the user asks follow-up questions about specific procedures, acronyms, or requirements mentioned in previous context, maintain that specific context. When recommending legal consultation, use this message: '" + randomRecommendation + "'",
-        },
-        { role: "user", content: `Pregunta: ${question}\n\nContexto (fragmentos):\n${ctxBlocks}` },
+        systemMessage,
+        ...recentHistory,
+        { role: "user" as const, content: `Pregunta: ${question}\n\nContexto (fragmentos de documentos oficiales):\n${ctxBlocks}` },
       ];
 
       const resp = await fetch(CHAT_URL, {
@@ -317,7 +345,8 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           model: CHAT_MODEL,
           messages,
-          temperature: 0.2,
+          temperature: 0.3,
+          max_tokens: 1000,
           stream: true,
         }),
       });

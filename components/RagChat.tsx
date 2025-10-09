@@ -14,19 +14,25 @@ type Citation = {
   url?: string | null; // for web fallback sources
 };
 
+type ConversationMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export default function RagChat() {
   const [q, setQ] = useState("");
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [sources, setSources] = useState<Citation[]>([]);
-  const [topK, setTopK] = useState(6);
-  const [minScore, setMinScore] = useState(0.25);
+  const [topK, setTopK] = useState(8);
+  const [minScore, setMinScore] = useState(0.30);
   const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
   const [kbOnly, setKbOnly] = useState(true);
   const ctrlRef = useRef<AbortController | null>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const [reqInfo, setReqInfo] = useState<{ id?: string; ms?: number }>({});
   const [routeBadge, setRouteBadge] = useState<string | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
 
@@ -41,11 +47,11 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
       const savedMinScore = localStorage.getItem("rag.minScore");
       const savedKbOnly = localStorage.getItem("rag.kbOnly");
       if (savedTopK) {
-        const n = Math.max(1, Math.min(12, parseInt(savedTopK, 10) || 6));
+        const n = Math.max(1, Math.min(12, parseInt(savedTopK, 10) || 8));
         setTopK(n);
       }
       if (savedMinScore) {
-        const n = Math.max(0, Math.min(1, parseFloat(savedMinScore) || 0.25));
+        const n = Math.max(0, Math.min(1, parseFloat(savedMinScore) || 0.30));
         setMinScore(n);
       }
       if (savedKbOnly) setKbOnly(savedKbOnly === "true");
@@ -57,6 +63,7 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
 
   async function answerNonStream() {
     if (!q.trim()) return;
+    const currentQuestion = q;
     setLoading(true);
     setAnswer("");
     setSources([]);
@@ -66,7 +73,13 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
       const res = await fetch(api("/api/rag/answer"), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: q, topK, minScore, kbOnly }),
+        body: JSON.stringify({ 
+          question: currentQuestion, 
+          topK, 
+          minScore, 
+          kbOnly,
+          conversationHistory 
+        }),
       });
       const json = await res.json();
 
@@ -79,7 +92,16 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || `HTTP ${res.status}`);
       }
-      setAnswer(json.answer || "");
+      const answerText = json.answer || "";
+      setAnswer(answerText);
+      
+      // Update conversation history
+      setConversationHistory(prev => [
+        ...prev,
+        { role: "user", content: currentQuestion },
+        { role: "assistant", content: answerText }
+      ]);
+      
       if (Array.isArray(json.citations)) {
         setSources(
           json.citations.map((c: any) => ({
@@ -98,11 +120,13 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
       setAnswer(`[error: ${e?.message || "LLM error"}]`);
     } finally {
       setLoading(false);
+      setQ(""); // Clear input after sending
     }
   }
 
   async function ask() {
     if (!q.trim()) return;
+    const currentQuestion = q;
     setLoading(true);
     setAnswer("");
     setSources([]);
@@ -112,10 +136,12 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
     ctrlRef.current?.abort();
     ctrlRef.current = new AbortController();
 
+    let finalAnswer = "";
+
     try {
       await readRagStream(
         api("/api/rag/stream"),
-        { question: q, topK, minScore, kbOnly },
+        { question: currentQuestion, topK, minScore, kbOnly, conversationHistory },
         {
           onInit: () => {},
           onMeta: (m: any) => {
@@ -128,6 +154,7 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
             }
           },
           onDelta: (d: string) => {
+            finalAnswer += d;
             setAnswer((prev) => prev + d);
             areaRef.current?.scrollTo({
               top: areaRef.current.scrollHeight,
@@ -142,11 +169,22 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
             }
           },
           onError: (err: string) => {
+            const errorMsg = `\n\n[error: ${err}]`;
+            finalAnswer += errorMsg;
             setAnswer((prev) =>
-              prev ? prev + `\n\n[error: ${err}]` : `[error: ${err}]`
+              prev ? prev + errorMsg : `[error: ${err}]`
             );
           },
-          onDone: () => setLoading(false),
+          onDone: () => {
+            // Update conversation history when stream completes
+            setConversationHistory(prev => [
+              ...prev,
+              { role: "user", content: currentQuestion },
+              { role: "assistant", content: finalAnswer }
+            ]);
+            setLoading(false);
+            setQ(""); // Clear input after sending
+          },
         },
         { signal: ctrlRef.current.signal }
       );
@@ -162,16 +200,31 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
 
   return (
     <div className="mx-auto max-w-3xl p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">KB Legal Assistant — RAG Stream</h1>
-          {routeBadge && (
-            <div className="text-xs inline-flex items-center gap-2 rounded-full border px-2 py-1">
-              <span className="opacity-60">Ruta</span>
-              <strong>{routeBadge}</strong>
-              {(routeBadge === "WEB_FALLBACK" || routeBadge === "GUIDANCE") ? (
-                <span className="ml-2 rounded-full bg-blue-50 px-2 py-[2px] text-blue-700 border border-blue-200">Consulta web</span>
-              ) : null}
-            </div>
-          )}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">KB Legal Assistant — RAG Stream</h1>
+        {conversationHistory.length > 0 && (
+          <button
+            onClick={() => {
+              setConversationHistory([]);
+              setAnswer("");
+            }}
+            className="text-sm px-3 py-1 rounded-lg border hover:bg-gray-50"
+            title="Limpiar historial de conversación"
+          >
+            Nueva conversación ({conversationHistory.length / 2} mensajes)
+          </button>
+        )}
+      </div>
+      
+      {routeBadge && (
+        <div className="text-xs inline-flex items-center gap-2 rounded-full border px-2 py-1">
+          <span className="opacity-60">Ruta</span>
+          <strong>{routeBadge}</strong>
+          {(routeBadge === "WEB_FALLBACK" || routeBadge === "GUIDANCE") ? (
+            <span className="ml-2 rounded-full bg-blue-50 px-2 py-[2px] text-blue-700 border border-blue-200">Consulta web</span>
+          ) : null}
+        </div>
+      )}
 
       {showDisclaimer && (
         <div className="rounded-2xl p-3 text-sm border shadow-sm">
@@ -216,8 +269,8 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
             max={12}
             value={topK}
             onChange={(e) => {
-              const v = parseInt(e.target.value || "6", 10);
-              const clamped = isNaN(v) ? 6 : Math.max(1, Math.min(12, v));
+              const v = parseInt(e.target.value || "8", 10);
+              const clamped = isNaN(v) ? 8 : Math.max(1, Math.min(12, v));
               setTopK(clamped);
               try {
                 localStorage.setItem("rag.topK", String(clamped));
@@ -236,8 +289,8 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
             max={1}
             value={minScore}
             onChange={(e) => {
-              const v = parseFloat(e.target.value || "0.25");
-              const clamped = isNaN(v) ? 0.25 : Math.max(0, Math.min(1, v));
+              const v = parseFloat(e.target.value || "0.30");
+              const clamped = isNaN(v) ? 0.30 : Math.max(0, Math.min(1, v));
               setMinScore(clamped);
               try {
                 localStorage.setItem("rag.minScore", String(clamped));

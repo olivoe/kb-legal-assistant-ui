@@ -62,8 +62,8 @@ const res = await fetch(url, {
       const safeEnd = Math.min(fullText.length, end);
       const raw = fullText.slice(start, safeEnd);
   
-      // Compact whitespace and trim to ~700 chars for UI
-      const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 700);
+      // Compact whitespace and trim to ~1000 chars for better context
+      const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 1000);
   
       return { snippet: cleaned, relPath };
     } catch {

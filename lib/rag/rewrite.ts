@@ -25,6 +25,56 @@ export function rewriteEs(q: string): string {
 
     // Ministry / models
     [/\bmodelo(s)?\s*ex-?0?3\b/, "Modelos EX-03"],
+    [/\bmodelo(s)?\s*ex-?0?1\b/, "Modelos EX-01"],
+    [/\bmodelo(s)?\s*ex-?0?2\b/, "Modelos EX-02"],
+    [/\bmodelo(s)?\s*ex-?1?5\b/, "Modelos EX-15"],
+    [/\bmodelo(s)?\s*ex-?1?8\b/, "Modelos EX-18"],
+    
+    // Residence types
+    [/\barraigo (social|laboral|familiar)\b/, "arraigo $1 requisitos autorización residencia"],
+    [/\bresidencia (temporal|permanente)\b/, "autorización residencia $1 España"],
+    [/\bresidencia por trabajo\b/, "autorización residencia y trabajo"],
+    [/\btarjeta (comunitaria|familiar)\b/, "tarjeta $1 régimen comunitario"],
+    
+    // Student-specific terms
+    [/\b(estancia|residencia) de estudiante(s)?\b/, "autorización estancia por estudios visa estudiante"],
+    [/\b(renovacion|prorroga) estudiante(s)?\b/, "renovación autorización estancia estudios"],
+    [/\bautorizacion de regreso\b/, "autorización de regreso estudiante extranjería"],
+    [/\bestudiar (en|y) trabajar\b/, "compatibilidad estudios trabajo autorización estudiante"],
+    
+    // Asylum and refugees
+    [/\b(solicitar|solicitud de) asilo\b/, "protección internacional asilo España procedimiento"],
+    [/\brefugiado\b/, "estatuto refugiado protección internacional"],
+    [/\bproteccion subsidiaria\b/, "protección subsidiaria internacional España"],
+    
+    // Family reunification
+    [/\breagrupacion familiar\b/, "reagrupación familiar extranjería requisitos"],
+    [/\breagrupacion de (hijos|padres|conyuge)\b/, "reagrupación familiar $1 requisitos documentación"],
+    
+    // Nationality
+    [/\bnacionalidad por residencia\b/, "nacionalidad española residencia 10 años requisitos"],
+    [/\bnacionalidad por matrimonio\b/, "nacionalidad española cónyuge español requisitos"],
+    [/\bnacionalidad (sefardi|hispanoamericana)\b/, "nacionalidad española origen $1"],
+    
+    // Work authorization
+    [/\b(cuenta ajena|cuenta propia)\b/, "autorización trabajo $1 residencia"],
+    [/\bautorizacion inicial trabajo\b/, "autorización inicial residencia trabajo"],
+    
+    // NIE/TIE documents
+    [/\b(nie|numero de identidad de extranjero)\b/, "NIE número identidad extranjero solicitud"],
+    [/\b(tie|tarjeta de identidad de extranjero)\b/, "TIE tarjeta identidad extranjero expedición"],
+    [/\bcanjear (nie|tie)\b/, "renovación expedición TIE"],
+    
+    // Fees and procedures
+    [/\btasas? (modelo 790|tasa 052)\b/, "tasa modelo 790 código 052 extranjería"],
+    [/\b(cita previa|pedir cita)\b/, "cita previa extranjería oficina"],
+    [/\bhuellas? (dactilares?|digitales?)\b/, "toma huellas TIE extranjería"],
+    
+    // Document requirements
+    [/\bantecedentes penales\b/, "certificado antecedentes penales apostilla"],
+    [/\bseguro medico\b/, "seguro médico cobertura sanitaria extranjería"],
+    [/\bmedios economicos\b/, "acreditación medios económicos suficientes"],
+    [/\bcontrato de trabajo\b/, "contrato trabajo autorización residencia"],
   ];
 
   let rewritten = s;
@@ -34,8 +84,15 @@ export function rewriteEs(q: string): string {
 
   // Add gentle anchors that help vector search
   const anchors: string[] = [];
-  if (/\bnacionalidad\b/.test(n)) anchors.push("Código Civil art. 20", "BOE Ley 20/2022");
+  if (/\bnacionalidad\b/.test(n)) anchors.push("Código Civil art. 20", "BOE Ley 20/2022", "requisitos nacionalidad española");
   if (/\bnieto/.test(n)) anchors.push("descendientes de españoles", "acreditación filiación/abuelos");
+  if (/\btasas?\b/.test(n)) anchors.push("modelo 790", "código 052", "importe tasas");
+  if (/\b(estudiante|estudios)\b/.test(n)) anchors.push("estancia por estudios", "autorización estudiante", "visa estudiante");
+  if (/\barraigo\b/.test(n)) anchors.push("arraigo social", "arraigo laboral", "arraigo familiar");
+  if (/\basilo\b/.test(n)) anchors.push("protección internacional", "solicitud asilo", "estatuto refugiado");
+  if (/\b(nie|tie)\b/.test(n)) anchors.push("número identidad extranjero", "tarjeta identidad extranjero");
+  if (/\breagrupacion\b/.test(n)) anchors.push("reagrupación familiar", "requisitos reagrupación");
+  
   if (anchors.length) rewritten += `; ${anchors.join("; ")}`;
 
   return rewritten;
