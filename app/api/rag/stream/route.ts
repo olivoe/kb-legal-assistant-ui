@@ -16,49 +16,55 @@ const CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL ?? "gpt-4.1-mini";
 function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string): boolean {
   const texts = [original || "", rewritten || ""].map((t) => t.toLowerCase());
-  const negatives = [
+  
+  // Only reject if clearly about OTHER countries' immigration (US, Canada, etc.)
+  const clearlyOtherCountries = [
     "h-1b", "h1b", "h1-b", "h 1b", "h‑1b",
-    "uscis", "green card",
-    "b1", "b2", "b1/b2", "f-1", "f1", "j-1", "j1",
-    "usa", "united states", "estados unidos", "eeuu", "ee.uu.",
+    "uscis", "green card", "social security number usa",
+    "b1/b2", "f-1 visa usa", "j-1 visa usa",
+    "united states immigration", "canadian immigration", "canada immigration",
+    "australian immigration", "australia immigration",
   ];
-  if (texts.some((s) => negatives.some((k) => s.includes(k)))) return false;
+  if (texts.some((s) => clearlyOtherCountries.some((k) => s.includes(k)))) return false;
   
-  // Enhanced Spain markers including follow-up question terms
-  const spainMarkers = [
-    "españa", "espana", "boe", "boe.es", "extranjería", "extranjeria", "nie", "tie",
-    "ministerio", "sede electrónica", "sede electronica", "modelo ex", "arraigo", "cita previa",
-    "nacionalidad", "refugiados", "refugiado", "asilo", "asilados",
-    "visado", "visa", "residencia", "residencia", "estudiante", "estudiantes",
-    "impreso", "formulario", "solicitud", "seguro", "medico", "medica", "cobertura",
-    "pasaporte", "consulado", "consular", "autorizacion", "menores", "adultos",
-    "educacion", "institucion", "universidad", "curso", "estudios",
-    "antecedentes", "penales", "certificado", "traduccion", "legalizacion", "apostilla",
-    "venezolano", "venezuela", "colombiano", "colombia", "ecuatoriano", "ecuador",
-    "peruano", "peru", "argentino", "argentina", "mexicano", "mexico",
-    "verano", "regreso", "autorizacion", "requisitos", "normativa", "vigente",
-    "mptfp", "ministerio", "politica", "territorial", "funcion", "publica",
+  // PERMISSIVE: Accept by default if it's in Spanish or mentions any immigration-related terms
+  // This includes: greetings, immigration words, legal terms, document requests, questions
+  const inDomainIndicators = [
+    // Spanish greetings and common words
+    "hola", "buenos", "dias", "tardes", "ayuda", "necesito", "quiero", "puedo", "como", "donde", "cuando", "que",
+    "gracias", "favor", "informacion", "información",
+    
+    // Immigration general terms
+    "inmigracion", "inmigración", "migracion", "migración", "extranjeria", "extranjería",
+    "visa", "visado", "pasaporte", "permiso", "autorizacion", "autorización",
+    "residencia", "nacionalidad", "ciudadania", "ciudadanía",
+    "refugio", "refugiado", "asilo", "asilado",
+    "estudiante", "trabajo", "familia", "matrimonio", "hijo", "hija", "padre", "madre",
+    "documento", "formulario", "solicitud", "tramite", "trámite", "procedimiento",
+    "requisitos", "plazo", "fecha", "tiempo", "duracion", "duración",
+    
+    // Spain-specific
+    "españa", "espana", "español", "española", "español", "nie", "tie",
+    "boe", "ministerio", "sede", "electronica", "electrónica",
+    "modelo ex", "arraigo", "reagrupacion", "reagrupación",
+    
+    // Countries (likely asking about immigration TO Spain FROM these)
+    "venezuela", "colombia", "ecuador", "peru", "argentina", "mexico", "bolivia",
+    "chile", "uruguay", "paraguay", "cuba", "nicaragua", "honduras",
+    
+    // Follow-up patterns
+    /^(y|si|como|donde|cuando|que|por|para|con|sin|sobre)/i,
   ];
   
-  // Treat as in-domain if Spain markers present OR volatile immigration keywords appear
-  const volatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i;
-  
-  // Enhanced follow-up detection: more comprehensive patterns
-  const followUpIndicators = /^(y|si|como|donde|cuando|que|como hago|como obtengo|donde obtengo|donde consigo|como consigo|si soy|si tengo|si es|si puede|si sirve|si funciona|cuáles son|cuales son|qué significa|que significa|qué es|que es|acronimo|acrónimo|sigla|que quiere decir)/i;
-  
-  // Check for quoted phrases from previous context
-  const quotedPhrases = /["""].*?["""]|'.*?'/;
-  const hasQuotedContent = quotedPhrases.test(original);
-  
-  // Check for specific immigration procedure references
-  const procedureReferences = /(autorizacion|autorización|requisitos|normativa|vigente|procedimiento|tramite|trámite).*(regreso|verano|estudiante|residencia|visado|asilo)/i;
-  
+  // Accept if ANY indicator is present
   return texts.some((s) => 
-    spainMarkers.some((k) => s.includes(k)) || 
-    volatile.test(s) ||
-    followUpIndicators.test(s.trim()) ||
-    hasQuotedContent ||
-    procedureReferences.test(s)
+    inDomainIndicators.some((indicator) => {
+      if (typeof indicator === 'string') {
+        return s.includes(indicator);
+      } else {
+        return indicator.test(s);
+      }
+    })
   );
 }
 
