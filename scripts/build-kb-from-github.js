@@ -347,7 +347,8 @@ class KBPipeline {
         },
         body: JSON.stringify({
           model: CONFIG.EMBEDDING_MODEL,
-          input: text
+          input: text,
+          dimensions: 256  // Match pseudoEmbed fallback dimensions
         })
       });
 

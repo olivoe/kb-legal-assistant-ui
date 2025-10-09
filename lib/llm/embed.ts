@@ -4,6 +4,8 @@
 
 const OPENAI_URL = "https://api.openai.com/v1/embeddings";
 const MODEL = process.env.OPENAI_EMBED_MODEL ?? "text-embedding-3-small";
+// IMPORTANT: Must match KB dimensions. Production KB uses 256 dimensions.
+const DIMENSIONS = parseInt(process.env.OPENAI_EMBED_DIMENSIONS || "256", 10);
 // Tip: use text-embedding-3-large for best quality; -small is cheaper.
 
 export async function embedText(input: string): Promise<number[]> {
@@ -16,7 +18,7 @@ export async function embedText(input: string): Promise<number[]> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
-    body: JSON.stringify({ model: MODEL, input }),
+    body: JSON.stringify({ model: MODEL, input, dimensions: DIMENSIONS }),
   });
 
   if (!resp.ok) {
