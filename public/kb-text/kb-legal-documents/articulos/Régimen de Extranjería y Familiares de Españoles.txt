@@ -1,0 +1,165 @@
+Régimen de Extranjería y Familiares de Españoles: Guía práctica tras el
+RD 1155/2024
+
+Introducción
+La entrada en vigor del Real Decreto 1155/2024 ha introducido novedades sustanciales
+en el tratamiento de los familiares de españoles, afectando tanto a la adquisición de
+nacionalidad como a las autorizaciones de residencia. Este artículo informativo
+desglosa:
+
+     •    Las nuevas categorías reconocidas (Art. 941H).
+     •    Los plazos y herramientas digitales disponibles.
+     •    Los criterios para autorización de residencia: arraigo social, asilo y reagrupación
+          UE.
+     •    La evolución de sanciones y expulsiones, alineada con la jurisprudencia nacional
+          y europea.
+     •    Diez claves prácticas para optimizar la defensa de estos derechos.
+
+A continuación, los apartados esenciales presentados en esquemas y tablas para
+facilitar su comprensión y aplicación en la práctica.
+1. Nuevas categorías de familiares de españoles (Art. 941H)
+
+
+
+               Categoría                         Requisito principal
+Hijos de españoles de origen       Acreditar origen español del progenitor,
+(jus sanguinis: art. 17 CC; arts. 172,
+                                   incluso si éste perdió la nacionalidad tras
+179, 192 CC)                       haberla obtenido
+                                   Nietos y bisnietos de exiliados políticos que
+Descendientes amparados por Ley de
+                                   renunciaron o perdieron la nacionalidad por
+Memoria Democrática
+                                   causas políticas o ideológicas
+Hijos de mujeres españolas que
+                                   Acreditar pérdida por matrimonio y origen
+perdieron la nacionalidad por
+                                   español previo
+matrimonio antes de 1978
+                                   Progenitores que obtuvieron la nacionalidad
+Hijos mayores de edad de optantes
+                                   por opción según la disposición adicional
+LMD
+                                   séptima LMD
+
+2. Plazos y digitalización
+
+
+
+      Procedimiento            Plazo                                 Digitalización disponible
+Solicitud Ley de Memoria Hasta 21 octubre                     Formularios en “migrarconderechos”;
+Democrática (LMD)        2025                                 prórrogas en Consejo de Ministros
+                                                              Provincias: Valladolid, León,
+Registros Civiles Digitales Burgos: 1 julio
+                                                              Ponferrada, Astorga, Zamora, Ávila y
+(Castilla y León)           2025
+                                                              Burgos
+                                          Más de 35
+Plataforma consular                                                 Tramitación íntegra por sede
+                                          consulados
+electrónica                                                         electrónica
+                                          habilitados
+
+3. Criterios de autorización de residencia
+
+
+
+     Tipo de
+                                        Requisitos clave                           Jurisprudencia relevante
+   autorización
+                           • 2 años de residencia continua (sin
+                           interrupciones > 90 días)
+                                                                TSJ Asturias 10 jul 2023; RD
+Arraigo social             • 6 meses de actividad laboral
+                                                                1155/2024, art. 126 B
+                           acreditable (cualquier medio de
+                           prueba)
+                           • Estancia tolerada durante trámite TS 24 ene 2024
+Asilo / subs.              (residencia y trabajo hasta          (incompatibilidad art. 37 Ley
+                           resolución definitiva)               Asilo vs. directivas UE)
+                           • Libre circulación de nacionales
+Reagrupación               UE                                   TJUE 29 abr 2024 (caso Malta
+UE                         • Estatuto de ciudadano UE para      vs. Comisión); sent. Zambrano
+                           familiares directos
+
+4. Evolución de expulsiones y sanciones
+
+
+
+    Período /
+                            Régimen de expulsión                             Elementos de agravación
+   Referencia
+                        Multa como sanción
+Pre-2015                principal; expulsión solo en               –
+                        supuestos agravados
+SDJUE abr               Expulsión obligatoria ante
+                                                                   Valoración de circunstancias personales
+2015                    estancia irregular
+              Multa posible; expulsión solo
+TJUE 3 mar                                  Falta de pasaporte/sellos, medios de
+              si persiste obligación de
+2020                                        vida, antecedentes sin resolución
+              salida
+              Multa prioritaria; expulsión
+TS 6 abr 2022 tras sanción y sin elementos –
+              atenuantes
+              Multa general; expulsión en Documentación, antecedentes
+RD 1155/2024 supuestos graves tras          penales/policiales, incumplimiento de
+              valoración individual         requerimiento de salida
+
+
+Diez claves prácticas en Olivo Galarza Abogados para optimizar la defensa de estos derechos:
+
+
+     1. Gestionamos proactivamente los plazos
+      o   Mantenemos un calendario interno con alertas automáticas para cada
+          fecha límite (p. ej. 21 de octubre de 2025 para la LMD, incorporación del
+          Registro Civil digital).
+      o Asignamos responsabilidades y confirmamos varias semanas antes con
+          el cliente la documentación pendiente.
+2. Verificamos siempre el formulario más reciente
+      o Descargamos diariamente los modelos oficiales desde
+          “migrarconderechos” y las sedes electrónicas.
+      o Comparamos la versión y la fecha de publicación antes de cada envío
+          para evitar rechazos por modelo obsoleto.
+3. Preparamos expedientes de prueba ordenados
+      o Creamos índices temáticos (empadronamientos, contratos, informes
+          médicos, etc.) y numeramos cada documento.
+      o Entregamos al cliente un dossier físico y un respaldo digital con
+          metadatos y hash de integridad.
+4. Optimizamos la tramitación electrónica
+      o Registramos a nuestros abogados con certificado corporativo en todas las
+          plataformas.
+      o Utilizamos firma electrónica y archivamos automáticamente el acuse de
+          recibo en el expediente digital.
+5. Coordinamos con consulados y registros locales
+      o Mantenemos una ficha de seguimiento del estado de digitalización en
+          cada oficina y consulado relevante.
+      o Nombramos un enlace administrativo para confirmar cambios de plazos o
+          requisitos y agilizar citas.
+6. Planificamos recursos y medidas cautelares
+      o Integramos en cada expediente un plan de acción con plazos de recurso
+          contencioso-administrativo y alertas para solicitar suspensiones de
+          expulsión.
+      o Preparamos la documentación necesaria para cada posible vía de
+          recurso.
+7. Diseñamos rutas alternativas de tramitación
+      o Elaboramos árboles de decisión que incluyan arraigo social, familiar,
+          formativo o asilo.
+      o Disponemos de formularios y guías de requisitos para cada ruta y las
+          presentamos al cliente junto con recomendaciones personalizadas.
+8. Garantizamos la validez de los documentos digitales
+      o Convertimos todos los archivos a PDF/A y comprobamos la legibilidad de
+          sellos y firmas.
+      o Registramos metadatos y hash para asegurar la integridad ante cualquier
+          impugnación.
+9. Activamos nuestra red de apoyo multidisciplinar
+      o Contamos con intérpretes, mediadores culturales y ONG referenciadas
+          para atención psicológica o social.
+      o Derivamos inmediatamente al cliente cuando es necesario reforzar la
+          asistencia jurídica con apoyo especializado.
+10. Planificamos el cómputo para la nacionalidad
+       o Calculamos y documentamos los años de residencia acumulados con
+           cada autorización (provisional y definitiva).
+       o Diseñamos un cronograma que muestra al cliente cuándo y cómo podrá
+           solicitar la nacionalidad española, optimizando tiempos y requisitos.
