@@ -9,10 +9,10 @@ type Meta = {
   function toRelPath(meta: Meta): string | null {
     const f = meta.file?.trim();
     if (!f) return null;
-    // Mirror the directory layout under /public/kb-text
-    // e.g. "Materiales Extranjeria/Normativa/BOE-xx.pdf" → "kb-text/Materiales Extranjeria/Normativa/BOE-xx.txt"
+    // Mirror the directory layout under /public/kb-text/kb-legal-documents
+    // e.g. "articulos/25-08-19 Ley de Nietos ES.pdf" → "kb-text/kb-legal-documents/articulos/25-08-19 Ley de Nietos ES.txt"
     const txtName = f.replace(/\.pdf$/i, ".txt");
-    return `kb-text/${txtName}`;
+    return `kb-text/kb-legal-documents/${txtName}`;
   }
   
   /** Guess a base URL we can fetch from (works in Vercel or local). */
@@ -55,15 +55,17 @@ const res = await fetch(url, {
   
       const fullText = await res.text();
   
-      // Guard and slice
+      // Guard and slice - extend beyond chunk boundary to capture complete sentences and law references
       const start = Math.max(0, meta.start ?? 0);
       const end = Math.max(start, meta.end ?? start + 500);
+      // Extend by 500 chars to capture complete sentences and legal references
+      const extendedEnd = end + 500;
       // Clamp end to file length to avoid exceptions
-      const safeEnd = Math.min(fullText.length, end);
+      const safeEnd = Math.min(fullText.length, extendedEnd);
       const raw = fullText.slice(start, safeEnd);
-  
-      // Compact whitespace and trim to ~1000 chars for better context
-      const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 1000);
+
+      // Compact whitespace and trim to ~2000 chars for better context (legal documents need more context)
+      const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 2000);
   
       return { snippet: cleaned, relPath };
     } catch {
