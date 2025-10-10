@@ -251,7 +251,10 @@ export default function KnowledgeBasePage() {
                         </div>
                         <div className="ml-4">
                           <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            PDF
+                            {doc.filename.toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                             doc.filename.toLowerCase().endsWith('.txt') ? 'TXT' :
+                             doc.filename.toLowerCase().endsWith('.md') ? 'MD' : 
+                             doc.filename.toLowerCase().endsWith('.html') ? 'HTML' : 'DOC'}
                           </span>
                         </div>
                       </div>
