@@ -123,6 +123,24 @@ function logRouteMetrics(data: Record<string, unknown>) {
   try { console.log(JSON.stringify({ level: "info", event: "rag.route", ...data })); } catch {}
 }
 
+function getOutOfDomainMessage(): string {
+  const messages = [
+    "Parece que su consulta no está relacionada con temas de Inmigración y Residencia en España. Esta IA se especializa únicamente en Inmigración, Residencia y Nacionalidad española. Si considera que esto es un error, por favor reformule su pregunta con más detalles específicos sobre inmigración.",
+    
+    "Su pregunta parece referirse a temas fuera del ámbito de la Inmigración española. Este asistente está especializado en cuestiones sobre Inmigración a España, Residencia y Nacionalidad. Si cree que se trata de un malentendido, intente replantear su consulta con más contexto sobre el procedimiento migratorio.",
+    
+    "No he podido identificar su consulta como relacionada con Inmigración a España. Mi especialidad son los trámites de Inmigración, Residencia y Nacionalidad española. Si piensa que esto es un error, le sugiero que amplíe su pregunta incluyendo más información sobre el proceso migratorio que le interesa.",
+    
+    "Parece que está preguntando sobre un tema que no se relaciona con la Inmigración española. Esta IA está diseñada para asistir exclusivamente en cuestiones de Inmigración, Residencia y obtención de Nacionalidad en España. Si esto no es correcto, reformule su pregunta con detalles adicionales sobre el trámite de extranjería.",
+    
+    "Su pregunta no parece estar vinculada con Inmigración y Residencia en España. Este sistema se especializa en proporcionar información sobre Inmigración a España, autorizaciones de Residencia y Nacionalidad española. Si considera que ha habido un error de interpretación, intente expresar su consulta de manera más específica en relación con procedimientos migratorios.",
+  ];
+  
+  // Select a random message
+  const randomIndex = Math.floor(Math.random() * messages.length);
+  return messages[randomIndex];
+}
+
 type EnrichedKBHit = {
   id: string;
   score: number;
@@ -240,7 +258,7 @@ export async function POST(req: NextRequest) {
         JSON.stringify({
           ok: true,
           question,
-          answer: "Esta IA se especializa solo en temas de Inmigración a España.",
+          answer: getOutOfDomainMessage(),
           citations: [],
           reqId,
           runtime_ms: ms,
