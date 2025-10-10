@@ -392,8 +392,16 @@ class KBPipeline {
       JSON.stringify(embeddingsData, null, 2)
     );
 
-    // Save document index
-    const documentIndex = this.documents.map(doc => doc.fullPath);
+    // Save document index (extract from embeddings to ensure consistency)
+    const documentIndex = Array.from(new Set(this.embeddings.map(emb => emb.file))).sort();
+    
+    // Save to data/kb/
+    await fs.writeFile(
+      path.join(CONFIG.OUTPUT_DIR, 'kb_index.json'),
+      JSON.stringify(documentIndex, null, 2)
+    );
+    
+    // Save to public/ for client access
     await fs.writeFile(
       path.join(process.cwd(), 'public', 'kb_index.json'),
       JSON.stringify(documentIndex, null, 2)
