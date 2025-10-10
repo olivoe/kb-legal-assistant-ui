@@ -2,6 +2,24 @@
 
 import { useState, useEffect } from "react";
 
+const COLORS = {
+  primary: '#111827',
+  secondary: '#6b7280',
+  border: '#e5e7eb',
+  background: '#f9fafb',
+  white: '#ffffff',
+  blue: '#2563eb',
+  blueLight: '#eff6ff',
+  green: '#10b981',
+  greenLight: '#d1fae5',
+  red: '#ef4444',
+  redLight: '#fee2e2',
+  purple: '#8b5cf6',
+  purpleLight: '#ede9fe',
+  orange: '#f59e0b',
+  orangeLight: '#fef3c7',
+};
+
 type ChatLogEntry = {
   sessionId: string;
   timestamp: string;
@@ -132,29 +150,88 @@ export default function AdminPage() {
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        background: COLORS.background,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+        <div style={{
+          background: COLORS.white,
+          borderRadius: '12px',
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+          padding: '48px',
+          width: '100%',
+          maxWidth: '400px',
+        }}>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            marginBottom: '32px',
+            textAlign: 'center',
+            color: COLORS.primary,
+          }}>
+            Admin Login
+          </h1>
           <form onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: COLORS.primary,
+                marginBottom: '8px',
+              }}>
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  outline: 'none',
+                }}
                 placeholder="Enter admin password"
+                onFocus={(e) => e.target.style.borderColor = COLORS.blue}
+                onBlur={(e) => e.target.style.borderColor = COLORS.border}
               />
             </div>
             {error && (
-              <div className="mb-4 text-red-600 text-sm">{error}</div>
+              <div style={{
+                marginBottom: '16px',
+                color: COLORS.red,
+                fontSize: '14px',
+                padding: '12px',
+                background: COLORS.redLight,
+                borderRadius: '6px',
+              }}>
+                {error}
+              </div>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+              style={{
+                width: '100%',
+                background: loading ? COLORS.secondary : COLORS.primary,
+                color: COLORS.white,
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}
             >
               {loading ? "Authenticating..." : "Login"}
             </button>
@@ -167,52 +244,154 @@ export default function AdminPage() {
   const totalPages = Math.ceil(totalLogs / pageSize);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Chat Admin Dashboard</h1>
-          <p className="text-gray-600">Monitor and analyze chat sessions</p>
+    <div style={{
+      minHeight: '100vh',
+      background: COLORS.background,
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+    }}>
+      {/* Header */}
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        borderBottom: `1px solid ${COLORS.border}`,
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(6px)',
+      }}>
+        <div style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: '24px 32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div>
+            <h1 style={{
+              margin: 0,
+              fontSize: '28px',
+              fontWeight: 700,
+              color: COLORS.primary,
+            }}>
+              Chat Admin Dashboard
+            </h1>
+            <p style={{
+              marginTop: '8px',
+              color: COLORS.secondary,
+              fontSize: '14px',
+            }}>
+              Monitor and analyze chat sessions
+            </p>
+          </div>
+          <a
+            href="/"
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: `1px solid ${COLORS.border}`,
+              background: COLORS.white,
+              color: COLORS.primary,
+              fontSize: '14px',
+              fontWeight: 500,
+              textDecoration: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            ← Back to Chat
+          </a>
         </div>
+      </header>
 
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px' }}>
         {/* Statistics Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-sm font-medium text-gray-600">Total Sessions</div>
-              <div className="text-3xl font-bold text-blue-600">{stats.totalSessions}</div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-sm font-medium text-gray-600">Total Queries</div>
-              <div className="text-3xl font-bold text-green-600">{stats.totalQueries}</div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-sm font-medium text-gray-600">Avg Response Time</div>
-              <div className="text-3xl font-bold text-purple-600">{stats.avgResponseTime}ms</div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-sm font-medium text-gray-600">Avg Top Score</div>
-              <div className="text-3xl font-bold text-orange-600">{stats.avgTopScore}</div>
-            </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '16px',
+            marginBottom: '32px',
+          }}>
+            <StatCard
+              label="Total Sessions"
+              value={stats.totalSessions}
+              color={COLORS.blue}
+              bgColor={COLORS.blueLight}
+            />
+            <StatCard
+              label="Total Queries"
+              value={stats.totalQueries}
+              color={COLORS.green}
+              bgColor={COLORS.greenLight}
+            />
+            <StatCard
+              label="Avg Response Time"
+              value={`${stats.avgResponseTime}ms`}
+              color={COLORS.purple}
+              bgColor={COLORS.purpleLight}
+            />
+            <StatCard
+              label="Avg Top Score"
+              value={stats.avgTopScore.toFixed(2)}
+              color={COLORS.orange}
+              bgColor={COLORS.orangeLight}
+            />
           </div>
         )}
 
         {/* Route Distribution */}
-        {stats && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-bold mb-4">Route Distribution</h2>
-            <div className="space-y-2">
+        {stats && Object.keys(stats.routeDistribution).length > 0 && (
+          <div style={{
+            background: COLORS.white,
+            borderRadius: '12px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            padding: '24px',
+            marginBottom: '32px',
+          }}>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 600,
+              marginBottom: '16px',
+              color: COLORS.primary,
+            }}>
+              Route Distribution
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {Object.entries(stats.routeDistribution).map(([route, count]) => (
-                <div key={route} className="flex items-center">
-                  <span className="w-32 text-sm font-medium">{route}</span>
-                  <div className="flex-1 bg-gray-200 rounded-full h-4">
-                    <div
-                      className="bg-blue-600 h-4 rounded-full"
-                      style={{
-                        width: `${(count / stats.totalQueries) * 100}%`,
-                      }}
-                    />
+                <div key={route} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{
+                    minWidth: '140px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: COLORS.secondary,
+                  }}>
+                    {route}
+                  </span>
+                  <div style={{
+                    flex: 1,
+                    height: '24px',
+                    background: COLORS.background,
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      height: '100%',
+                      background: COLORS.blue,
+                      borderRadius: '12px',
+                      width: `${(count / stats.totalQueries) * 100}%`,
+                      transition: 'width 0.3s ease',
+                    }} />
                   </div>
-                  <span className="ml-2 text-sm text-gray-600">{count}</span>
+                  <span style={{
+                    minWidth: '40px',
+                    textAlign: 'right',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: COLORS.primary,
+                  }}>
+                    {count}
+                  </span>
                 </div>
               ))}
             </div>
@@ -221,22 +400,64 @@ export default function AdminPage() {
 
         {/* Recent Activity Chart */}
         {stats && stats.recentActivity.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-bold mb-4">Recent Activity (Last 7 Days)</h2>
-            <div className="flex items-end justify-between h-48 gap-2">
+          <div style={{
+            background: COLORS.white,
+            borderRadius: '12px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            padding: '24px',
+            marginBottom: '32px',
+          }}>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 600,
+              marginBottom: '16px',
+              color: COLORS.primary,
+            }}>
+              Recent Activity (Last 7 Days)
+            </h2>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              height: '200px',
+              gap: '8px',
+            }}>
               {stats.recentActivity.map((day, idx) => {
                 const maxCount = Math.max(...stats.recentActivity.map((d) => d.count));
                 const height = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
                 return (
-                  <div key={idx} className="flex-1 flex flex-col items-center">
-                    <div className="w-full bg-blue-600 rounded-t" style={{ height: `${height}%` }} />
-                    <div className="text-xs text-gray-600 mt-2">
+                  <div key={idx} style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}>
+                    <div style={{
+                      width: '100%',
+                      background: COLORS.blue,
+                      borderRadius: '6px 6px 0 0',
+                      height: `${height}%`,
+                      minHeight: day.count > 0 ? '4px' : '0',
+                      transition: 'height 0.3s ease',
+                    }} />
+                    <div style={{
+                      fontSize: '11px',
+                      color: COLORS.secondary,
+                      textAlign: 'center',
+                    }}>
                       {new Date(day.date).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
+                        month: 'short',
+                        day: 'numeric',
                       })}
                     </div>
-                    <div className="text-xs font-medium">{day.count}</div>
+                    <div style={{
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: COLORS.primary,
+                    }}>
+                      {day.count}
+                    </div>
                   </div>
                 );
               })}
@@ -245,11 +466,34 @@ export default function AdminPage() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-4">
-          <h2 className="text-xl font-bold mb-4">Filters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div style={{
+          background: COLORS.white,
+          borderRadius: '12px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          padding: '24px',
+          marginBottom: '24px',
+        }}>
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            marginBottom: '16px',
+            color: COLORS.primary,
+          }}>
+            Filters
+          </h2>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+          }}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: COLORS.primary,
+                marginBottom: '8px',
+              }}>
                 Route
               </label>
               <select
@@ -258,7 +502,14 @@ export default function AdminPage() {
                   setFilterRoute(e.target.value);
                   setPage(0);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
               >
                 <option value="">All Routes</option>
                 <option value="KB_ONLY">KB Only</option>
@@ -268,7 +519,13 @@ export default function AdminPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: COLORS.primary,
+                marginBottom: '8px',
+              }}>
                 Min Score
               </label>
               <input
@@ -279,12 +536,25 @@ export default function AdminPage() {
                   setFilterMinScore(e.target.value);
                   setPage(0);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
                 placeholder="e.g., 0.5"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: COLORS.primary,
+                marginBottom: '8px',
+              }}>
                 Start Date
               </label>
               <input
@@ -294,84 +564,141 @@ export default function AdminPage() {
                   setFilterStartDate(e.target.value);
                   setPage(0);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
               />
             </div>
           </div>
         </div>
 
         {/* Logs Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold">Chat Logs</h2>
-            <p className="text-sm text-gray-600">
+        <div style={{
+          background: COLORS.white,
+          borderRadius: '12px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            padding: '24px',
+            borderBottom: `1px solid ${COLORS.border}`,
+          }}>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 600,
+              color: COLORS.primary,
+              marginBottom: '4px',
+            }}>
+              Chat Logs
+            </h2>
+            <p style={{
+              fontSize: '14px',
+              color: COLORS.secondary,
+              margin: 0,
+            }}>
               Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, totalLogs)} of {totalLogs}
             </p>
           </div>
           
           {loading ? (
-            <div className="p-8 text-center text-gray-600">Loading...</div>
+            <div style={{
+              padding: '48px',
+              textAlign: 'center',
+              color: COLORS.secondary,
+            }}>
+              Loading...
+            </div>
           ) : logs.length === 0 ? (
-            <div className="p-8 text-center text-gray-600">No logs found</div>
+            <div style={{
+              padding: '48px',
+              textAlign: 'center',
+              color: COLORS.secondary,
+            }}>
+              No logs found
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+              }}>
+                <thead style={{ background: COLORS.background }}>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Timestamp
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Question
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Route
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Score
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time (ms)
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    {['Timestamp', 'Question', 'Route', 'Score', 'Time (ms)', 'Actions'].map((header) => (
+                      <th key={header} style={{
+                        padding: '12px 24px',
+                        textAlign: 'left',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: COLORS.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}>
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {logs.map((log, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={idx} style={{
+                      borderTop: `1px solid ${COLORS.border}`,
+                    }}>
+                      <td style={{
+                        padding: '16px 24px',
+                        fontSize: '14px',
+                        color: COLORS.primary,
+                        whiteSpace: 'nowrap',
+                      }}>
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-md truncate">
+                      <td style={{
+                        padding: '16px 24px',
+                        fontSize: '14px',
+                        color: COLORS.primary,
+                        maxWidth: '300px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
                         {log.question}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            log.metadata.route === "KB_ONLY"
-                              ? "bg-green-100 text-green-800"
-                              : log.metadata.route === "KB_EMPTY"
-                              ? "bg-red-100 text-red-800"
-                              : log.metadata.route === "WEB_FALLBACK"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {log.metadata.route || "N/A"}
-                        </span>
+                      <td style={{ padding: '16px 24px' }}>
+                        <RouteBadge route={log.metadata.route || "N/A"} />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td style={{
+                        padding: '16px 24px',
+                        fontSize: '14px',
+                        color: COLORS.primary,
+                      }}>
                         {log.metadata.topScore?.toFixed(3) || "N/A"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td style={{
+                        padding: '16px 24px',
+                        fontSize: '14px',
+                        color: COLORS.primary,
+                      }}>
                         {log.metadata.responseTimeMs || "N/A"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td style={{ padding: '16px 24px' }}>
                         <button
                           onClick={() => setSelectedLog(log)}
-                          className="text-blue-600 hover:text-blue-800"
+                          style={{
+                            padding: '6px 12px',
+                            border: `1px solid ${COLORS.border}`,
+                            borderRadius: '6px',
+                            background: COLORS.white,
+                            color: COLORS.blue,
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                          }}
                         >
                           View Details
                         </button>
@@ -385,21 +712,50 @@ export default function AdminPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div style={{
+              padding: '16px 24px',
+              borderTop: `1px solid ${COLORS.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
               <button
                 onClick={() => setPage(Math.max(0, page - 1))}
                 disabled={page === 0}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  padding: '8px 16px',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '6px',
+                  background: COLORS.white,
+                  color: page === 0 ? COLORS.secondary : COLORS.primary,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: page === 0 ? 'not-allowed' : 'pointer',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
               >
                 Previous
               </button>
-              <span className="text-sm text-gray-700">
+              <span style={{
+                fontSize: '14px',
+                color: COLORS.secondary,
+              }}>
                 Page {page + 1} of {totalPages}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                 disabled={page === totalPages - 1}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  padding: '8px 16px',
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '6px',
+                  background: COLORS.white,
+                  color: page === totalPages - 1 ? COLORS.secondary : COLORS.primary,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: page === totalPages - 1 ? 'not-allowed' : 'pointer',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
               >
                 Next
               </button>
@@ -409,129 +765,275 @@ export default function AdminPage() {
 
         {/* Detail Modal */}
         {selectedLog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
-                <h3 className="text-xl font-bold">Log Details</h3>
-                <button
-                  onClick={() => setSelectedLog(null)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="p-6 space-y-4">
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Timestamp</h4>
-                  <p className="text-sm">{new Date(selectedLog.timestamp).toLocaleString()}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Session ID</h4>
-                  <p className="text-sm font-mono">{selectedLog.sessionId}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Question</h4>
-                  <p className="text-sm bg-gray-50 p-3 rounded">{selectedLog.question}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-700 mb-2">Answer</h4>
-                  <p className="text-sm bg-gray-50 p-3 rounded whitespace-pre-wrap">{selectedLog.answer}</p>
-                </div>
-                {selectedLog.metadata.rewrittenQuery && (
-                  <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Rewritten Query</h4>
-                    <p className="text-sm bg-blue-50 p-3 rounded">{selectedLog.metadata.rewrittenQuery}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Metadata</h4>
-                    <dl className="text-sm space-y-1">
-                      <div className="flex">
-                        <dt className="font-medium w-32">Route:</dt>
-                        <dd>{selectedLog.metadata.route}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-medium w-32">Top Score:</dt>
-                        <dd>{selectedLog.metadata.topScore?.toFixed(3)}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-medium w-32">Response Time:</dt>
-                        <dd>{selectedLog.metadata.responseTimeMs}ms</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-medium w-32">TopK:</dt>
-                        <dd>{selectedLog.metadata.topK}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-medium w-32">Min Score:</dt>
-                        <dd>{selectedLog.metadata.minScore}</dd>
-                      </div>
-                      <div className="flex">
-                        <dt className="font-medium w-32">In Domain:</dt>
-                        <dd>{selectedLog.metadata.inDomain ? "Yes" : "No"}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Top Scores</h4>
-                    <div className="text-sm space-y-1">
-                      {selectedLog.metadata.topScores?.slice(0, 5).map((score, i) => (
-                        <div key={i} className="flex items-center">
-                          <span className="w-4">{i + 1}.</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2 mx-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${score * 100}%` }}
-                            />
-                          </div>
-                          <span className="w-12 text-right">{score.toFixed(3)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                {selectedLog.metadata.sources && selectedLog.metadata.sources.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Sources ({selectedLog.metadata.sources.length})</h4>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {selectedLog.metadata.sources.map((source, i) => (
-                        <div key={i} className="bg-gray-50 p-3 rounded text-sm">
-                          <div className="flex justify-between mb-1">
-                            <span className="font-medium">{source.file || "Unknown"}</span>
-                            <span className="text-blue-600">{source.score.toFixed(3)}</span>
-                          </div>
-                          {source.snippet && (
-                            <p className="text-xs text-gray-600 line-clamp-2">{source.snippet}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {selectedLog.conversationHistory && selectedLog.conversationHistory.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Conversation History</h4>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {selectedLog.conversationHistory.map((msg, i) => (
-                        <div key={i} className={`p-3 rounded text-sm ${
-                          msg.role === "user" ? "bg-blue-50" : "bg-gray-50"
-                        }`}>
-                          <div className="font-medium text-xs uppercase mb-1">{msg.role}</div>
-                          <p className="whitespace-pre-wrap">{msg.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <LogDetailModal
+            log={selectedLog}
+            onClose={() => setSelectedLog(null)}
+          />
         )}
       </div>
     </div>
   );
 }
 
+function StatCard({ label, value, color, bgColor }: {
+  label: string;
+  value: string | number;
+  color: string;
+  bgColor: string;
+}) {
+  return (
+    <div style={{
+      background: COLORS.white,
+      borderRadius: '12px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      padding: '24px',
+    }}>
+      <div style={{
+        fontSize: '14px',
+        fontWeight: 500,
+        color: COLORS.secondary,
+        marginBottom: '8px',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: '32px',
+        fontWeight: 700,
+        color,
+      }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function RouteBadge({ route }: { route: string }) {
+  const getRouteColor = () => {
+    switch (route) {
+      case 'KB_ONLY':
+        return { bg: COLORS.greenLight, text: COLORS.green };
+      case 'KB_EMPTY':
+        return { bg: COLORS.redLight, text: COLORS.red };
+      case 'WEB_FALLBACK':
+        return { bg: COLORS.orangeLight, text: COLORS.orange };
+      case 'OUT_OF_DOMAIN':
+        return { bg: COLORS.purpleLight, text: COLORS.purple };
+      default:
+        return { bg: COLORS.background, text: COLORS.secondary };
+    }
+  };
+
+  const colors = getRouteColor();
+
+  return (
+    <span style={{
+      padding: '4px 12px',
+      borderRadius: '12px',
+      background: colors.bg,
+      color: colors.text,
+      fontSize: '12px',
+      fontWeight: 600,
+      whiteSpace: 'nowrap',
+    }}>
+      {route}
+    </span>
+  );
+}
+
+function LogDetailModal({ log, onClose }: {
+  log: ChatLogEntry;
+  onClose: () => void;
+}) {
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px',
+      zIndex: 50,
+    }} onClick={onClose}>
+      <div style={{
+        background: COLORS.white,
+        borderRadius: '12px',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+        maxWidth: '900px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+      }} onClick={(e) => e.stopPropagation()}>
+        <div style={{
+          padding: '24px',
+          borderBottom: `1px solid ${COLORS.border}`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          background: COLORS.white,
+          zIndex: 1,
+        }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: COLORS.primary,
+            margin: 0,
+          }}>
+            Log Details
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '8px',
+              border: 'none',
+              background: 'transparent',
+              color: COLORS.secondary,
+              cursor: 'pointer',
+              fontSize: '24px',
+              lineHeight: '1',
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ padding: '24px' }}>
+          <DetailSection label="Timestamp">
+            {new Date(log.timestamp).toLocaleString()}
+          </DetailSection>
+          <DetailSection label="Session ID">
+            <code style={{
+              fontSize: '12px',
+              padding: '4px 8px',
+              background: COLORS.background,
+              borderRadius: '4px',
+            }}>
+              {log.sessionId}
+            </code>
+          </DetailSection>
+          <DetailSection label="Question">
+            <div style={{
+              padding: '12px',
+              background: COLORS.background,
+              borderRadius: '8px',
+              fontSize: '14px',
+              lineHeight: '1.5',
+            }}>
+              {log.question}
+            </div>
+          </DetailSection>
+          <DetailSection label="Answer">
+            <div style={{
+              padding: '12px',
+              background: COLORS.background,
+              borderRadius: '8px',
+              fontSize: '14px',
+              lineHeight: '1.5',
+              whiteSpace: 'pre-wrap',
+              maxHeight: '300px',
+              overflowY: 'auto',
+            }}>
+              {log.answer}
+            </div>
+          </DetailSection>
+          {log.metadata.rewrittenQuery && (
+            <DetailSection label="Rewritten Query">
+              <div style={{
+                padding: '12px',
+                background: COLORS.blueLight,
+                borderRadius: '8px',
+                fontSize: '14px',
+              }}>
+                {log.metadata.rewrittenQuery}
+              </div>
+            </DetailSection>
+          )}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '16px',
+            marginTop: '24px',
+          }}>
+            <DetailSection label="Route">
+              <RouteBadge route={log.metadata.route || "N/A"} />
+            </DetailSection>
+            <DetailSection label="Top Score">
+              {log.metadata.topScore?.toFixed(3) || "N/A"}
+            </DetailSection>
+            <DetailSection label="Response Time">
+              {log.metadata.responseTimeMs}ms
+            </DetailSection>
+            <DetailSection label="In Domain">
+              {log.metadata.inDomain ? "Yes" : "No"}
+            </DetailSection>
+          </div>
+          {log.metadata.topScores && log.metadata.topScores.length > 0 && (
+            <DetailSection label="Top Scores">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {log.metadata.topScores.slice(0, 5).map((score, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}>
+                    <span style={{ minWidth: '20px', fontSize: '14px', color: COLORS.secondary }}>
+                      {i + 1}.
+                    </span>
+                    <div style={{
+                      flex: 1,
+                      height: '8px',
+                      background: COLORS.background,
+                      borderRadius: '4px',
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        background: COLORS.blue,
+                        borderRadius: '4px',
+                        width: `${score * 100}%`,
+                      }} />
+                    </div>
+                    <span style={{
+                      minWidth: '60px',
+                      textAlign: 'right',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: COLORS.primary,
+                    }}>
+                      {score.toFixed(3)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </DetailSection>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailSection({ label, children }: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ marginBottom: '24px' }}>
+      <div style={{
+        fontSize: '14px',
+        fontWeight: 600,
+        color: COLORS.secondary,
+        marginBottom: '8px',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: '14px',
+        color: COLORS.primary,
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
