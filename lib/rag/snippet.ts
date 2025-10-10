@@ -27,6 +27,9 @@ type Meta = {
    * Try to load a readable snippet for a hit by fetching the sidecar text file
    * and slicing its content using the [start,end) offsets.
    *
+   * IMPORTANT: meta.start and meta.end are WORD INDICES, not character positions!
+   * We need to convert word indices to character positions before slicing.
+   *
    * Returns: { snippet, relPath }
    */
   export async function loadSnippetFromMeta(
@@ -44,25 +47,29 @@ type Meta = {
     try {
       // AFTER
 const res = await fetch(url, {
-    // Don’t cache at the function layer; the CDN will handle static caching.
+    // Don't cache at the function layer; the CDN will handle static caching.
     cache: "no-store",
     next: { revalidate: 0 },
   });
       if (!res.ok) {
-        // Sidecar might not exist for some sources; don’t fail hard.
+        // Sidecar might not exist for some sources; don't fail hard.
         return { snippet: "", relPath };
       }
   
       const fullText = await res.text();
   
-      // Guard and slice - extend beyond chunk boundary to capture complete sentences, lists, and law references
-      const start = Math.max(0, meta.start ?? 0);
-      const end = Math.max(start, meta.end ?? start + 500);
-      // Extend by 1500 chars to capture complete lists and structured content (legal docs often have long numbered lists)
-      const extendedEnd = end + 1500;
-      // Clamp end to file length to avoid exceptions
-      const safeEnd = Math.min(fullText.length, extendedEnd);
-      const raw = fullText.slice(start, safeEnd);
+      // Convert word indices to text snippet
+      // meta.start and meta.end are WORD indices from the KB build script, not character positions
+      const words = fullText.split(/\s+/);
+      const startWordIdx = Math.max(0, meta.start ?? 0);
+      const endWordIdx = Math.max(startWordIdx, meta.end ?? startWordIdx + 100);
+      
+      // Extend by 200 words to capture complete sentences, lists, and law references
+      const extendedEndWordIdx = Math.min(words.length, endWordIdx + 200);
+      
+      // Extract words and join them back
+      const selectedWords = words.slice(startWordIdx, extendedEndWordIdx);
+      const raw = selectedWords.join(' ');
 
       // Compact whitespace and trim to ~3000 chars for better context (legal documents with lists need more context)
       const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 3000);
