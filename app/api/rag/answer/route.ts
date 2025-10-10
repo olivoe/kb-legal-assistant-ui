@@ -54,8 +54,12 @@ function isInSpanishImmigrationDomainStrict(
     "residencia", "nacionalidad", "ciudadania", "ciudadanía",
     "refugio", "refugiado", "asilo", "asilado",
     "estudiante", "trabajo", "familia", "matrimonio", "hijo", "hija", "padre", "madre",
+    "esposa", "esposo", "conyuge", "cónyuge", "pareja", "viudo", "viuda",
     "documento", "formulario", "solicitud", "tramite", "trámite", "procedimiento",
     "requisitos", "plazo", "fecha", "tiempo", "duracion", "duración",
+    "comunicacion", "comunicación", "comunicar", "notificar", "notificacion", "notificación",
+    "fallecimiento", "fallecido", "fallecida", "defuncion", "defunción", "muerte", "muerto", "muerta",
+    "presentar", "presentacion", "presentación", "inscribir", "inscripcion", "inscripción",
     
     // Spain-specific economic/legal indicators used in immigration
     "iprem", "i.p.r.e.m", "indicador publico", "indicador público",
@@ -73,9 +77,10 @@ function isInSpanishImmigrationDomainStrict(
     "venezuela", "colombia", "ecuador", "peru", "argentina", "mexico", "bolivia",
     "chile", "uruguay", "paraguay", "cuba", "nicaragua", "honduras",
     
-    // Follow-up patterns
-    /^(y|si|como|donde|cuando|que|por|para|con|sin|sobre)/i,
+    // Follow-up patterns (with and without accents)
+    /^(y|si|como|cómo|donde|dónde|cuando|cuándo|que|qué|por|para|con|sin|sobre)/i,
     /cuanto|cuánto|cuanta|cuánta|precio|costo|valor/i,
+    /^(hago|hago|realizo|efectuo|efectúo|presento)/i,
   ];
   
   // Accept if ANY indicator is present in the current question
