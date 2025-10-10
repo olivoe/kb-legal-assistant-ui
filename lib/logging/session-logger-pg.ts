@@ -293,10 +293,10 @@ export async function getChatStats(): Promise<{
  */
 export async function cleanupOldLogs(daysToKeep: number = 90): Promise<number> {
   try {
-    const result = await sql`
-      DELETE FROM chat_sessions
-      WHERE timestamp < NOW() - INTERVAL '${sql.raw(daysToKeep.toString())} days'
-    `;
+    // Use sql.query() for dynamic interval construction
+    const result = await sql.query(
+      `DELETE FROM chat_sessions WHERE timestamp < NOW() - INTERVAL '${daysToKeep} days'`
+    );
     
     return result.rowCount || 0;
   } catch (error) {
