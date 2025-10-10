@@ -37,24 +37,14 @@ export default function KnowledgeBasePage() {
           });
           setDocuments(processedDocs);
 
-          // Fetch embeddings to compute coverage badge (embedded vs total)
+          // Fetch embeddings to get total chunk count
           try {
             const embRes = await fetch(`/embeddings.json?ts=${Date.now()}`, { cache: 'no-store', headers: { 'cache-control': 'no-store' } });
             if (embRes.ok) {
               const embData = await embRes.json();
-              const embeddedFiles: Set<string> = new Set(
-                Array.isArray(embData.items) ? embData.items.map((it: any) => String(it.file || '')) : []
-              );
-              const count = processedDocs.reduce((acc: number, doc: Document) => {
-                const candidates = [
-                  doc.path,
-                  doc.path.replace(/\.pdf$/i, '.txt'),
-                  doc.path.replace(/\.txt$/i, '.pdf')
-                ];
-                const covered = candidates.some((c) => embeddedFiles.has(c));
-                return covered ? acc + 1 : acc;
-              }, 0);
-              setEmbeddedCount(count);
+              // Show total embedding chunks, not unique files
+              const totalEmbeddings = Array.isArray(embData.items) ? embData.items.length : 0;
+              setEmbeddedCount(totalEmbeddings);
             }
           } catch (_e) {
             // ignore coverage badge errors
@@ -151,9 +141,9 @@ export default function KnowledgeBasePage() {
                 Documentos de Inmigración a España
               </p>
               <div className="text-sm text-gray-500" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>{documents.length} documentos totales</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                  {embeddedCount} con embeddings
+                <span>{documents.length} documentos</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  {embeddedCount.toLocaleString()} embeddings
                 </span>
               </div>
             </div>
