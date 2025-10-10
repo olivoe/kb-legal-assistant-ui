@@ -24,8 +24,8 @@ export default function RagChat() {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [sources, setSources] = useState<Citation[]>([]);
-  const [topK, setTopK] = useState(8);
-  const [minScore, setMinScore] = useState(0.30);
+  const [topK, setTopK] = useState(12);
+  const [minScore, setMinScore] = useState(0.28);
   const [openIds, setOpenIds] = useState<Record<string, boolean>>({});
   const [kbOnly, setKbOnly] = useState(true);
   const ctrlRef = useRef<AbortController | null>(null);

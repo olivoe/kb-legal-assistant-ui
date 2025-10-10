@@ -34,8 +34,8 @@ export async function searchKB(
   opts?: { k?: number; minScore?: number }
 ): Promise<Hit[]> {
   const { items } = await loadKB(); // NOTE: loadKB now returns { dim, items }
-  const k = opts?.k ?? 8; // Increased default for more context
-  const minScore = opts?.minScore ?? 0.30; // Increased default for better quality
+  const k = opts?.k ?? 12; // Increased for better diversity on broad queries
+  const minScore = opts?.minScore ?? 0.28; // Balanced threshold for quality vs coverage
 
   const scored: Hit[] = items
     .map((it) => ({

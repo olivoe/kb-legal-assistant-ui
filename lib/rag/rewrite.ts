@@ -51,10 +51,13 @@ export function rewriteEs(q: string): string {
     [/\breagrupacion familiar\b/, "reagrupación familiar extranjería requisitos"],
     [/\breagrupacion de (hijos|padres|conyuge)\b/, "reagrupación familiar $1 requisitos documentación"],
     
-    // Nationality
-    [/\bnacionalidad por residencia\b/, "nacionalidad española residencia 10 años requisitos"],
-    [/\bnacionalidad por matrimonio\b/, "nacionalidad española cónyuge español requisitos"],
+    // Nationality - comprehensive paths
+    [/\b(todas las|todos los) (formas?|manera|maneras|modo|modos|via|vias|camino|caminos|opciones?) (de|para|a) (obtener|adquirir|conseguir|optar|solicitar)( la)? nacionalidad\b/, "nacionalidad española por residencia por opción por matrimonio por carta de naturaleza"],
+    [/\b(como|cuales?|que) (formas?|manera|maneras|modo|modos|via|vias|camino|caminos|opciones?) (de|para|a|hay|existen) (obtener|adquirir|conseguir|optar|solicitar)( la)? nacionalidad\b/, "nacionalidad española por residencia por opción por matrimonio por carta de naturaleza"],
+    [/\bnacionalidad por residencia\b/, "nacionalidad española residencia 10 años 2 años 1 año requisitos"],
+    [/\bnacionalidad por matrimonio\b/, "nacionalidad española cónyuge español 1 año residencia requisitos"],
     [/\bnacionalidad (sefardi|hispanoamericana)\b/, "nacionalidad española origen $1"],
+    [/\bnacionalidad por (opcion|optar)\b/, "nacionalidad española opción descendiente español nietos"],
     
     // Work authorization
     [/\b(cuenta ajena|cuenta propia)\b/, "autorización trabajo $1 residencia"],
@@ -84,7 +87,11 @@ export function rewriteEs(q: string): string {
 
   // Add gentle anchors that help vector search
   const anchors: string[] = [];
-  if (/\bnacionalidad\b/.test(n)) anchors.push("Código Civil art. 20", "BOE Ley 20/2022", "requisitos nacionalidad española");
+  if (/\b(todas las|todos los) (formas?|manera|maneras|modo|modos|via|vias|opciones?)\b.*\bnacionalidad\b/.test(n)) {
+    anchors.push("nacionalidad por residencia", "nacionalidad por opción", "nacionalidad por matrimonio", "nacionalidad por carta de naturaleza", "requisitos nacionalidad española");
+  } else if (/\bnacionalidad\b/.test(n)) {
+    anchors.push("Código Civil art. 20", "BOE Ley 20/2022", "requisitos nacionalidad española");
+  }
   if (/\bnieto/.test(n)) anchors.push("descendientes de españoles", "acreditación filiación/abuelos");
   if (/\btasas?\b/.test(n)) anchors.push("modelo 790", "código 052", "importe tasas");
   if (/\b(estudiante|estudios)\b/.test(n)) anchors.push("estancia por estudios", "autorización estudiante", "visa estudiante");
