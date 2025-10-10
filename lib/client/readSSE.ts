@@ -19,13 +19,19 @@ export async function readRagStream(
       minScore?: number; 
       kbOnly?: boolean;
       conversationHistory?: Array<{role: "user" | "assistant", content: string}>;
+      sessionId?: string; // ← NEW
     },
     handlers: SSEHandlers,
     opts?: { signal?: AbortSignal } // ← NEW
   ) {
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (body.sessionId) {
+      headers["x-session-id"] = body.sessionId;
+    }
+    
     const res = await fetch(endpoint, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers,
       body: JSON.stringify(body),
       signal: opts?.signal, // ← NEW
     });

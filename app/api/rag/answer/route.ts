@@ -6,6 +6,8 @@ import { searchKB } from "@/lib/rag/search";
 import { loadKB } from "@/lib/rag/kb";
 import { loadSnippetFromMeta } from "@/lib/rag/snippet";
 import { webFallback } from "@/lib/rag/web";
+import { logChatSession } from "@/lib/logging/session-logger";
+import crypto from "crypto";
 
 export const runtime = "nodejs";
 
@@ -253,12 +255,46 @@ export async function POST(req: NextRequest) {
     // Hard gate: always specialize when out-of-domain
     if (!inDomain) {
       const ms = Date.now() - t0;
+      const outOfDomainMsg = getOutOfDomainMessage();
       logRouteMetrics({ reqId, inDomain, route: "specialization", topScore, topK, minScore, ms });
+      
+      // Log out-of-domain session
+      try {
+        const sessionId = req.headers.get("x-session-id") || crypto.randomUUID();
+        const userAgent = req.headers.get("user-agent") || undefined;
+        const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+        const ipHash = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+        
+        await logChatSession({
+          sessionId,
+          timestamp: new Date().toISOString(),
+          question,
+          answer: outOfDomainMsg,
+          conversationHistory: Array.isArray(conversationHistory) ? conversationHistory : undefined,
+          metadata: {
+            topK,
+            minScore,
+            kbOnly,
+            route: "OUT_OF_DOMAIN",
+            topScores: [],
+            topScore: 0,
+            responseTimeMs: ms,
+            model: CHAT_MODEL,
+            inDomain: false,
+          },
+          requestId: reqId,
+          userAgent,
+          ipHash,
+        });
+      } catch (logErr) {
+        console.error("Failed to log out-of-domain session:", logErr);
+      }
+      
       return new Response(
         JSON.stringify({
           ok: true,
           question,
-          answer: getOutOfDomainMessage(),
+          answer: outOfDomainMsg,
           citations: [],
           reqId,
           runtime_ms: ms,
@@ -394,7 +430,47 @@ CONVERSACIÓN:
     }));
 
     const ms = Date.now() - t0;
-    logRouteMetrics({ reqId, inDomain, route: webEnriched.length > 0 ? "kb+web" : "kb", topScore, topK, minScore, ms });
+    const actualRoute = webEnriched.length > 0 ? "kb+web" : "kb";
+    logRouteMetrics({ reqId, inDomain, route: actualRoute, topScore, topK, minScore, ms });
+    
+    // Log successful chat session
+    try {
+      const sessionId = req.headers.get("x-session-id") || crypto.randomUUID();
+      const userAgent = req.headers.get("user-agent") || undefined;
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+      const ipHash = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+      
+      await logChatSession({
+        sessionId,
+        timestamp: new Date().toISOString(),
+        question,
+        answer,
+        conversationHistory: Array.isArray(conversationHistory) ? conversationHistory : undefined,
+        metadata: {
+          topK,
+          minScore,
+          kbOnly,
+          route: actualRoute.toUpperCase().replace("+", "_"),
+          topScores: kbHits.map((h) => h.score),
+          topScore,
+          responseTimeMs: ms,
+          model: CHAT_MODEL,
+          inDomain,
+          sources: allEnriched.slice(0, 5).map((h) => ({
+            id: h.id,
+            score: h.score,
+            file: h.meta?.file || null,
+            snippet: h.snippet?.slice(0, 200),
+          })),
+        },
+        requestId: reqId,
+        userAgent,
+        ipHash,
+      });
+    } catch (logErr) {
+      console.error("Failed to log chat session:", logErr);
+    }
+    
     return new Response(
       JSON.stringify({
         ok: true,

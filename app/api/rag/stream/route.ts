@@ -7,6 +7,8 @@ import { loadKB } from "@/lib/rag/kb";
 import { loadSnippetFromMeta } from "@/lib/rag/snippet";
 import { webFallback } from "@/lib/rag/web";
 import { rewriteEs } from "@/lib/rag/rewrite";
+import { logChatSession } from "@/lib/logging/session-logger";
+import crypto from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -210,11 +212,47 @@ export async function POST(req: NextRequest) {
     if (!inDomain) {
       const { readable, writable } = new TransformStream();
       const writer = writable.getWriter();
+      const outOfDomainMsg = getOutOfDomainMessage();
+      
       (async () => {
-        await writer.write(sse(JSON.stringify({ delta: getOutOfDomainMessage() })));
+        await writer.write(sse(JSON.stringify({ delta: outOfDomainMsg })));
         const ms = Date.now() - t0;
         await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms })));
         await writer.write(sse(JSON.stringify({ done: true })));
+        
+        // Log out-of-domain session
+        try {
+          const sessionId = req.headers.get("x-session-id") || crypto.randomUUID();
+          const userAgent = req.headers.get("user-agent") || undefined;
+          const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+          const ipHash = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+          
+          await logChatSession({
+            sessionId,
+            timestamp: new Date().toISOString(),
+            question,
+            answer: outOfDomainMsg,
+            conversationHistory: Array.isArray(conversationHistory) ? conversationHistory : undefined,
+            metadata: {
+              topK,
+              minScore,
+              kbOnly,
+              route: "OUT_OF_DOMAIN",
+              topScores: [],
+              topScore: 0,
+              responseTimeMs: ms,
+              model: CHAT_MODEL,
+              rewrittenQuery: rewrittenQ,
+              inDomain: false,
+            },
+            requestId: reqId,
+            userAgent,
+            ipHash,
+          });
+        } catch (logErr) {
+          console.error("Failed to log out-of-domain session:", logErr);
+        }
+        
         await writer.close();
       })();
 
@@ -229,7 +267,7 @@ export async function POST(req: NextRequest) {
         "x-rag-top-score": String(topScore),
         "x-rag-topk": String(topK),
         "x-rag-min-score": String(minScore),
-        "x-route": "SPECIALIZATION",
+        "x-route": "OUT_OF_DOMAIN",
         "x-domain": "out",
       };
       return new Response(readable, { status: 200, headers: sseHeaders });
@@ -444,6 +482,7 @@ CONVERSACIÓN:
       const reader = resp.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
+      let accumulatedAnswer = ""; // Track full answer for logging
 
       while (true) {
         const { value, done } = await reader.read();
@@ -457,7 +496,10 @@ CONVERSACIÓN:
           try {
             const obj = JSON.parse(payload);
             const delta: string | undefined = obj?.choices?.[0]?.delta?.content;
-            if (delta) await writer.write(sse(JSON.stringify({ delta })));
+            if (delta) {
+              accumulatedAnswer += delta;
+              await writer.write(sse(JSON.stringify({ delta })));
+            }
           } catch {}
         }
         const lastNl = buffer.lastIndexOf("\n");
@@ -467,6 +509,46 @@ CONVERSACIÓN:
       const ms = Date.now() - t0;
       await writer.write(sse(JSON.stringify({ event: "metrics", reqId, runtime_ms: ms, route: actualRoute })));
       await writer.write(sse(JSON.stringify({ done: true })));
+      
+      // Log the chat session
+      try {
+        const sessionId = req.headers.get("x-session-id") || crypto.randomUUID();
+        const userAgent = req.headers.get("user-agent") || undefined;
+        const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+        const ipHash = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+        
+        await logChatSession({
+          sessionId,
+          timestamp: new Date().toISOString(),
+          question,
+          answer: accumulatedAnswer,
+          conversationHistory: Array.isArray(conversationHistory) ? conversationHistory : undefined,
+          metadata: {
+            topK,
+            minScore,
+            kbOnly,
+            route: actualRoute,
+            topScores: hits.map((h) => h.score),
+            topScore,
+            responseTimeMs: ms,
+            model: CHAT_MODEL,
+            rewrittenQuery: rewrittenQ,
+            inDomain,
+            sources: enriched.slice(0, 5).map((h) => ({
+              id: h.id,
+              score: h.score,
+              file: h.meta?.file || null,
+              snippet: h.snippet?.slice(0, 200),
+            })),
+          },
+          requestId: reqId,
+          userAgent,
+          ipHash,
+        });
+      } catch (logErr) {
+        console.error("Failed to log chat session:", logErr);
+      }
+      
       await writer.close();
     })().catch(async (e) => {
       try {

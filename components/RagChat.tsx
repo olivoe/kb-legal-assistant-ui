@@ -34,6 +34,7 @@ export default function RagChat() {
   const [reqInfo, setReqInfo] = useState<{ id?: string; ms?: number }>({});
   const [routeBadge, setRouteBadge] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
+  const [sessionId] = useState(() => crypto.randomUUID()); // Generate session ID once
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "";
 const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
 
@@ -73,7 +74,10 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
     try {
       const res = await fetch(api("/api/rag/answer"), {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { 
+          "content-type": "application/json",
+          "x-session-id": sessionId 
+        },
         body: JSON.stringify({ 
           question: currentQuestion, 
           topK, 
@@ -141,7 +145,7 @@ const api = (p: string) => `${API_BASE}${p.startsWith("/") ? p : `/${p}`}`;
     try {
       await readRagStream(
         api("/api/rag/stream"),
-        { question: currentQuestion, topK, minScore, kbOnly, conversationHistory },
+        { question: currentQuestion, topK, minScore, kbOnly, conversationHistory, sessionId },
         {
           onInit: () => {
             console.log("[RagChat] Stream initialized");
