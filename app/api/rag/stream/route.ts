@@ -14,7 +14,11 @@ export const revalidate = 0;
 
 const CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL ?? "gpt-4.1-mini";
-function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string): boolean {
+function isInSpanishImmigrationDomainStrict(
+  original: string, 
+  rewritten?: string,
+  conversationHistory?: Array<{role: string, content: string}>
+): boolean {
   const texts = [original || "", rewritten || ""].map((t) => t.toLowerCase());
   
   // Only reject if clearly about OTHER countries' immigration (US, Canada, etc.)
@@ -43,10 +47,17 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     "documento", "formulario", "solicitud", "tramite", "trámite", "procedimiento",
     "requisitos", "plazo", "fecha", "tiempo", "duracion", "duración",
     
-    // Spain-specific
-    "españa", "espana", "español", "española", "español", "nie", "tie",
+    // Spain-specific economic/legal indicators used in immigration
+    "iprem", "i.p.r.e.m", "indicador publico", "indicador público",
+    "salario minimo", "salario mínimo", "smipg", "s.m.i",
+    "empadronamiento", "empadronar", "padron", "padrón",
+    "tasa", "tasas", "precio publico", "precio público",
+    
+    // Spain-specific immigration terms
+    "españa", "espana", "español", "española", "nie", "tie",
     "boe", "ministerio", "sede", "electronica", "electrónica",
     "modelo ex", "arraigo", "reagrupacion", "reagrupación",
+    "tarjeta comunitaria", "regimen comunitario", "régimen comunitario",
     
     // Countries (likely asking about immigration TO Spain FROM these)
     "venezuela", "colombia", "ecuador", "peru", "argentina", "mexico", "bolivia",
@@ -54,10 +65,11 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
     
     // Follow-up patterns
     /^(y|si|como|donde|cuando|que|por|para|con|sin|sobre)/i,
+    /cuanto|cuánto|cuanta|cuánta|precio|costo|valor/i,
   ];
   
-  // Accept if ANY indicator is present
-  return texts.some((s) => 
+  // Accept if ANY indicator is present in the current question
+  const currentQuestionInDomain = texts.some((s) => 
     inDomainIndicators.some((indicator) => {
       if (typeof indicator === 'string') {
         return s.includes(indicator);
@@ -66,6 +78,30 @@ function isInSpanishImmigrationDomainStrict(original: string, rewritten?: string
       }
     })
   );
+  
+  if (currentQuestionInDomain) return true;
+  
+  // If no direct indicators, check conversation history
+  // If recent conversation was about immigration, treat follow-ups as in-domain
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recentHistory = conversationHistory.slice(-4); // Last 2 exchanges
+    const historyText = recentHistory
+      .map(msg => msg.content)
+      .join(" ")
+      .toLowerCase();
+    
+    const historyInDomain = inDomainIndicators.some((indicator) => {
+      if (typeof indicator === 'string') {
+        return historyText.includes(indicator);
+      } else {
+        return indicator.test(historyText);
+      }
+    });
+    
+    if (historyInDomain) return true;
+  }
+  
+  return false;
 }
 
 function logRouteMetrics(data: Record<string, unknown>) {
@@ -126,7 +162,7 @@ export async function POST(req: NextRequest) {
 
     const topScores = (hits ?? []).map(h => h?.score ?? 0).slice(0, 5);
     const topScore = topScores[0] ?? 0;
-    const inDomain = isInSpanishImmigrationDomainStrict(question, rewrittenQ);
+    const inDomain = isInSpanishImmigrationDomainStrict(question, rewrittenQ, conversationHistory);
     const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|\bultima\b|\búltima\b|estudiante|estudiantes/i.test(rewrittenQ);
     let route = "KB_ONLY" as "KB_ONLY" | "KB_EMPTY" | "WEB_FALLBACK" | "GUIDANCE" | "SPECIALIZATION";
     if (hits.length > 0) route = "KB_ONLY";
