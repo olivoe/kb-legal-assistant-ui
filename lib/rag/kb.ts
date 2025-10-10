@@ -17,7 +17,8 @@ type KBItem = {
     if (memo) return { dim: memo.dims, items: memo.items };
   
     const base = guessPublicUrl(originFromRoute);
-    const url = `${base}/embeddings.json`;
+    // Use production KB with 1536 dimensions and full 4,178 items
+    const url = `${base}/kb-text/embeddings.json`;
   
     // Always no-store on server to avoid 401s and stale caches
     try {
@@ -39,14 +40,14 @@ type KBItem = {
       try {
         const { readFile } = await import("fs/promises");
         const { join } = await import("path");
-        const p = join(process.cwd(), "public", "embeddings.json");
+        const p = join(process.cwd(), "public", "kb-text", "embeddings.json");
         const raw = await readFile(p, "utf8");
         const json = JSON.parse(raw) as KB;
         memo = json;
         return { dim: memo.dims, items: memo.items };
       } catch (fsErr: any) {
         throw new Error(
-          `Failed to load embeddings.json via HTTP (${(e as any)?.message}) and FS (${fsErr?.message}).`
+          `Failed to load kb-text/embeddings.json via HTTP (${(e as any)?.message}) and FS (${fsErr?.message}).`
         );
       }
     }

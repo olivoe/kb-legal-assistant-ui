@@ -323,8 +323,8 @@ class KBPipeline {
    * Get embedding from OpenAI
    */
   async getEmbedding(text) {
-    // Helper: deterministic pseudo-embedding fallback
-    function pseudoEmbed(s, dims = 256) {
+    // Helper: deterministic pseudo-embedding fallback (use 1536 to match production)
+    function pseudoEmbed(s, dims = 1536) {
       const vec = new Array(dims).fill(0);
       let h1 = 2166136261 >>> 0;
       for (let i = 0; i < s.length; i++) {
@@ -347,8 +347,8 @@ class KBPipeline {
         },
         body: JSON.stringify({
           model: CONFIG.EMBEDDING_MODEL,
-          input: text,
-          dimensions: 256  // Match pseudoEmbed fallback dimensions
+          input: text
+          // No dimensions parameter = use full 1536 dimensions from text-embedding-3-small
         })
       });
 
