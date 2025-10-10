@@ -55,17 +55,17 @@ const res = await fetch(url, {
   
       const fullText = await res.text();
   
-      // Guard and slice - extend beyond chunk boundary to capture complete sentences and law references
+      // Guard and slice - extend beyond chunk boundary to capture complete sentences, lists, and law references
       const start = Math.max(0, meta.start ?? 0);
       const end = Math.max(start, meta.end ?? start + 500);
-      // Extend by 500 chars to capture complete sentences and legal references
-      const extendedEnd = end + 500;
+      // Extend by 1500 chars to capture complete lists and structured content (legal docs often have long numbered lists)
+      const extendedEnd = end + 1500;
       // Clamp end to file length to avoid exceptions
       const safeEnd = Math.min(fullText.length, extendedEnd);
       const raw = fullText.slice(start, safeEnd);
 
-      // Compact whitespace and trim to ~2000 chars for better context (legal documents need more context)
-      const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 2000);
+      // Compact whitespace and trim to ~3000 chars for better context (legal documents with lists need more context)
+      const cleaned = raw.replace(/\s+/g, " ").trim().slice(0, 3000);
   
       return { snippet: cleaned, relPath };
     } catch {

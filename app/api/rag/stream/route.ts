@@ -292,7 +292,7 @@ export async function POST(req: NextRequest) {
       const ctxBlocks = enriched
         .map((h, i) => {
           const loc = `${h.meta?.file ?? ""} [${h.meta?.start ?? ""}-${h.meta?.end ?? ""}]`;
-          const snip = (h.snippet ?? "").slice(0, 2000);
+          const snip = (h.snippet ?? "").slice(0, 3000);
           return `#${i + 1} ${loc}\n${snip}`;
         })
         .join("\n\n---\n\n");
@@ -315,6 +315,13 @@ EXTRACCIÓN DE LEYES Y NORMATIVA:
 - Si el contexto menciona una ley con su número, úsalo en tu respuesta
 - CRÍTICO: NUNCA inventes números de leyes, decretos o normativas que no aparezcan textualmente en el contexto
 - Si no encuentras el número exacto en el contexto, di "no se especifica el número de la ley en los documentos proporcionados"
+
+EXTRACCIÓN DE LISTAS Y REQUISITOS:
+- Cuando el contexto contenga listas numeradas o con viñetas (requisitos, documentos, pasos), extrae y presenta la LISTA COMPLETA
+- Mantén la estructura y numeración original de las listas
+- Si una lista tiene sub-items (a, b, c), inclúyelos todos
+- NO digas "no se especifica" si la lista completa está en el contexto - extráela íntegramente
+- Cuando el usuario pida "lista completa" o "todos los documentos/requisitos", asegúrate de incluir TODOS los ítems presentes en el contexto
 
 MANEJO DE INFORMACIÓN INCOMPLETA:
 - Si el contexto no contiene información específica sobre fechas, tasas actualizadas, o procedimientos vigentes, indica: "La información específica sobre [tema] requiere verificación actualizada"
