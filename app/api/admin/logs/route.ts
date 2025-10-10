@@ -1,6 +1,6 @@
 // app/api/admin/logs/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { readChatLogs, getChatStats } from "@/lib/logging/session-logger";
+import { readChatLogs, getChatStats } from "@/lib/logging/session-logger-pg";
 
 // Simple authentication - in production, use proper auth
 function isAuthenticated(req: NextRequest): boolean {

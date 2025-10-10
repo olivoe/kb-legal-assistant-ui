@@ -6,7 +6,7 @@ import { searchKB } from "@/lib/rag/search";
 import { loadKB } from "@/lib/rag/kb";
 import { loadSnippetFromMeta } from "@/lib/rag/snippet";
 import { webFallback } from "@/lib/rag/web";
-import { logChatSession } from "@/lib/logging/session-logger";
+import { logChatSession } from "@/lib/logging/session-logger-pg";
 import crypto from "crypto";
 
 export const runtime = "nodejs";
