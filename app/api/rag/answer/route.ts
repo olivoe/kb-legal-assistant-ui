@@ -451,7 +451,7 @@ CONVERSACIÓN:
           minScore,
           kbOnly,
           route: actualRoute.toUpperCase().replace("+", "_"),
-          topScores: kbHits.map((h) => h.score),
+          topScores: hits.map((h) => h.score),
           topScore,
           responseTimeMs: ms,
           model: CHAT_MODEL,
