@@ -306,7 +306,7 @@ CONVERSACIÓN:
         "content-type": "application/json",
         authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: JSON.stringify({ model: CHAT_MODEL, messages, temperature: 0.3, max_tokens: 1000 }),
+      body: JSON.stringify({ model: CHAT_MODEL, messages, temperature: 0.3, max_tokens: 2500 }),
     });
 
     if (!resp.ok) {

@@ -366,7 +366,7 @@ CONVERSACIÓN:
           model: CHAT_MODEL,
           messages,
           temperature: 0.3,
-          max_tokens: 1000,
+          max_tokens: 2500,
           stream: true,
         }),
       });
