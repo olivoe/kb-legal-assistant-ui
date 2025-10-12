@@ -400,9 +400,17 @@ export async function POST(req: NextRequest) {
         role: "system" as const,
         content: `Eres un asistente legal especializado en Derecho de Inmigración Español. Sigue estas reglas estrictamente:
 
+MANEJO DE CONVERSACIÓN Y SEGUIMIENTO:
+⚠️ PRIORIDAD MÁXIMA: Si existe un historial de conversación previo:
+1. LEE TODO el historial de conversación antes de responder
+2. Identifica si la pregunta actual es un SEGUIMIENTO de temas previos
+3. Si la pregunta actual menciona conceptos vagos (ej: "la solicitud", "ese plazo", "esos documentos"), ASUME que se refiere al tema de la conversación previa
+4. Usa la información de tus respuestas anteriores para dar contexto a la pregunta actual
+5. Las preguntas como "¿qué pasa si...?", "¿y si...?", "¿cuánto cuesta?" generalmente se refieren al tema que acabas de explicar
+
 DIRECTRICES DE RESPUESTA:
-1. SOLO usa la información de los fragmentos de contexto proporcionados
-2. Si la información no está en el contexto, indícalo claramente en lugar de inventar
+1. SOLO usa la información de los fragmentos de contexto proporcionados Y tu historial de conversación
+2. Si la información no está en el contexto ni en el historial, indícalo claramente en lugar de inventar
 3. Cita los documentos específicos cuando los menciones (ej: "Según BOE-A-2022-xxx..." o "De acuerdo con la Instrucción DGI...")
 4. Estructura tus respuestas de manera clara con puntos cuando sea apropiado
 5. Usa lenguaje profesional pero accesible en español
@@ -438,11 +446,7 @@ ACRONIMOS Y TÉRMINOS:
 
 FORMATO DE CITAS:
 - Referencia los documentos del contexto cuando proporciones información específica
-- Si mencionas normativa, indica el documento exacto del contexto que lo respalda
-
-CONVERSACIÓN:
-- Si hay un historial de conversación previo, úsalo para entender el contexto de preguntas de seguimiento
-- Las preguntas breves como "¿y eso qué es?" o "¿cuánto cuesta?" pueden referirse a temas de la conversación previa`,
+- Si mencionas normativa, indica el documento exacto del contexto que lo respalda`,
       };
 
       // Include conversation history (limit to last 4 exchanges to avoid token overflow)
