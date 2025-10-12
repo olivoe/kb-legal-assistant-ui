@@ -417,7 +417,8 @@ export async function POST(req: NextRequest) {
 6. **SI HAY CONFLICTO ENTRE CONTEXTO NUEVO Y CONVERSACIÓN:**
    - PRIORIZA la línea de conversación establecida
    - Solo cambia de tema si el usuario EXPLÍCITAMENTE pregunta por algo nuevo (ej: "ahora quiero preguntar sobre otro tema...")
-   - Si el contexto nuevo no encaja con el tema de conversación, menciona: "En relación a [tema de la conversación], ..."
+   - SIEMPRE menciona el tema de la conversación en tu respuesta (ej: "En relación al arraigo social del que hablamos...")
+   - Si el contexto nuevo no encaja, di explícitamente: "Los documentos proporcionados hablan de [otro tema], pero en relación al [tema de conversación] que mencionaste..."
 
 DIRECTRICES DE RESPUESTA:
 1. SOLO usa la información de los fragmentos de contexto proporcionados Y tu historial de conversación
