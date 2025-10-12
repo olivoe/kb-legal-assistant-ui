@@ -23,13 +23,15 @@ function isInSpanishImmigrationDomainStrict(
 ): boolean {
   const texts = [original || "", rewritten || ""].map((t) => t.toLowerCase());
   
-  // Only reject if clearly about OTHER countries' immigration (US, Canada, etc.)
+  // Only reject if clearly about OTHER countries' immigration (US, Canada, Portugal, etc.)
   const clearlyOtherCountries = [
     "h-1b", "h1b", "h1-b", "h 1b", "h‑1b",
     "uscis", "green card", "social security number usa",
     "b1/b2", "f-1 visa usa", "j-1 visa usa",
     "united states immigration", "canadian immigration", "canada immigration",
     "australian immigration", "australia immigration",
+    "portugal", "portuguesa", "portugués", "portugues", "nacionalidad portuguesa",
+    "en portugal", "de portugal", "desde portugal",
   ];
   if (texts.some((s) => clearlyOtherCountries.some((k) => s.includes(k)))) return false;
   
