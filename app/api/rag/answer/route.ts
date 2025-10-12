@@ -87,21 +87,8 @@ function isInSpanishImmigrationDomainStrict(
     /^(hago|hago|realizo|efectuo|efectúo|presento)/i,
   ];
   
-  // Accept if ANY indicator is present in the current question
-  const currentQuestionInDomain = texts.some((s) => 
-    inDomainIndicators.some((indicator) => {
-      if (typeof indicator === 'string') {
-        return s.includes(indicator);
-      } else {
-        return indicator.test(s);
-      }
-    })
-  );
-  
-  if (currentQuestionInDomain) return true;
-  
-  // If no direct indicators, check conversation history
-  // If recent conversation was about immigration, treat follow-ups as in-domain
+  // CRITICAL: If there's conversation history, check it FIRST before checking current question
+  // This allows follow-up questions to be in-domain even if they don't contain immigration keywords
   if (conversationHistory && conversationHistory.length > 0) {
     const recentHistory = conversationHistory.slice(-4); // Last 2 exchanges
     const historyText = recentHistory
@@ -117,8 +104,34 @@ function isInSpanishImmigrationDomainStrict(
       }
     });
     
-    if (historyInDomain) return true;
+    // If conversation history is about immigration, ALWAYS accept follow-ups
+    // This includes questions like "cuales son?", "mencionaste X", "que significa eso?"
+    if (historyInDomain) {
+      // Additional check: make sure the question is a follow-up, not a completely new topic
+      const clearlyNewTopic = [
+        /^(ahora|otra pregunta|cambiando de tema|hablemos de|quiero preguntar sobre|nueva consulta)/i,
+      ];
+      
+      const isNewTopic = clearlyNewTopic.some(pattern => texts.some(t => pattern.test(t)));
+      
+      if (!isNewTopic) {
+        return true; // Accept as continuation of immigration conversation
+      }
+    }
   }
+  
+  // Accept if ANY indicator is present in the current question
+  const currentQuestionInDomain = texts.some((s) => 
+    inDomainIndicators.some((indicator) => {
+      if (typeof indicator === 'string') {
+        return s.includes(indicator);
+      } else {
+        return indicator.test(s);
+      }
+    })
+  );
+  
+  if (currentQuestionInDomain) return true;
   
   return false;
 }
