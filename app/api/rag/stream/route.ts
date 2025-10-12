@@ -179,7 +179,25 @@ function expandFollowUpQuery(question: string, conversationHistory: Array<{role:
     lastAssistantMessage ? lastAssistantMessage.content.slice(0, 150) : ''
   ].filter(Boolean).join(' ');
   
-  // Expand the query by prepending context
+  // Extract main topic/procedure name if present (arraigo, TIE, nacionalidad, etc.)
+  const topicKeywords = [
+    'arraigo social', 'arraigo laboral', 'arraigo familiar', 'arraigo',
+    'renovación TIE', 'renovación', 'TIE', 'tarjeta',
+    'nacionalidad española', 'nacionalidad por residencia', 'nacionalidad por opción', 'nacionalidad',
+    'reagrupación familiar', 'familiar comunitario', 'residencia comunitaria',
+    'Ley de Memoria', 'Ley de Nietos',
+    'visado', 'permiso de trabajo', 'autorización de residencia'
+  ];
+  
+  // Find the most specific topic mentioned in the conversation
+  const contextLower = topicContext.toLowerCase();
+  const mainTopic = topicKeywords.find(keyword => contextLower.includes(keyword)) || '';
+  
+  // Expand the query by prepending context + emphasizing main topic
+  if (mainTopic) {
+    return `${mainTopic} ${topicContext} - ${question}`;
+  }
+  
   return `${topicContext} - ${question}`;
 }
 
