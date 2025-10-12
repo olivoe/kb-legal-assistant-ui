@@ -142,6 +142,47 @@ function ev(name: string, data?: any) {
   return `event: ${name}\n${data ? sse(JSON.stringify(data)).slice(5) : "\n"}`;
 }
 
+/**
+ * Expands vague follow-up questions by incorporating recent conversation context
+ */
+function expandFollowUpQuery(question: string, conversationHistory: Array<{role: string, content: string}>): string {
+  // If no history or question is already detailed, return as-is
+  if (!conversationHistory || conversationHistory.length === 0) {
+    return question;
+  }
+  
+  // Check if question looks like a vague follow-up
+  const vaguePatterns = [
+    /^(qué pasa|y si|mientras|durante|cuando|puedo|debo|tengo que|necesito)/i,
+    /\b(la solicitud|el plazo|ese plazo|esos documentos|ese trámite|la renovación|el proceso)\b/i,
+    /^(sí|no|vale|ok|gracias|pero|entonces|ah)/i,
+  ];
+  
+  const isVague = vaguePatterns.some(pattern => pattern.test(question));
+  
+  if (!isVague) {
+    return question; // Question is already specific
+  }
+  
+  // Get last user question from history to add context
+  const recentHistory = conversationHistory.slice(-4); // Last 2 exchanges
+  const lastUserMessage = recentHistory.filter(m => m.role === 'user').pop();
+  const lastAssistantMessage = recentHistory.filter(m => m.role === 'assistant').pop();
+  
+  if (!lastUserMessage) {
+    return question;
+  }
+  
+  // Extract key topic from last exchange (first 100 chars of user + assistant messages)
+  const topicContext = [
+    lastUserMessage.content.slice(0, 100),
+    lastAssistantMessage ? lastAssistantMessage.content.slice(0, 150) : ''
+  ].filter(Boolean).join(' ');
+  
+  // Expand the query by prepending context
+  return `${topicContext} - ${question}`;
+}
+
 export async function POST(req: NextRequest) {
   const reqId = genRequestId();
   const t0 = Date.now();
@@ -149,7 +190,10 @@ export async function POST(req: NextRequest) {
   try {
     // Adjusted defaults: topK=8 for more context, minScore=0.30 for better quality
     const { question, topK = 8, minScore = 0.30, kbOnly = true, conversationHistory = [] } = await req.json();
-    const rewrittenQ = rewriteEs(question);
+    
+    // Expand vague follow-up questions with conversation context, then apply Spanish rewriting
+    const expandedQuery = expandFollowUpQuery(question, conversationHistory);
+    const rewrittenQ = rewriteEs(expandedQuery);
 
     if (!process.env.OPENAI_API_KEY) {
       return new Response(sse(JSON.stringify({ ok: false, error: "Missing OPENAI_API_KEY" })), {
