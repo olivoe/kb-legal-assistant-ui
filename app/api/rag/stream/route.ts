@@ -194,12 +194,16 @@ function expandFollowUpQuery(question: string, conversationHistory: Array<{role:
   
   // Extract main topic/procedure name if present (arraigo, TIE, nacionalidad, etc.)
   const topicKeywords = [
+    'homologación de título', 'homologación título', 'homologación',
+    'convalidación de título', 'reconocimiento de título',
     'arraigo social', 'arraigo laboral', 'arraigo familiar', 'arraigo',
-    'renovación TIE', 'renovación', 'TIE', 'tarjeta',
+    'renovación TIE', 'renovación de tarjeta', 'renovación',
     'nacionalidad española', 'nacionalidad por residencia', 'nacionalidad por opción', 'nacionalidad',
     'reagrupación familiar', 'familiar comunitario', 'residencia comunitaria',
     'Ley de Memoria', 'Ley de Nietos',
-    'visado', 'permiso de trabajo', 'autorización de residencia'
+    'autorización de residencia para emprendedores', 'emprendedores',
+    'visado de estudiante', 'visado',
+    'permiso de trabajo', 'autorización de residencia', 'TIE', 'tarjeta'
   ];
   
   // Find the most specific topic mentioned in the conversation
@@ -208,6 +212,20 @@ function expandFollowUpQuery(question: string, conversationHistory: Array<{role:
   
   // Expand the query by prepending context + emphasizing main topic
   if (mainTopic) {
+    // For topics that commonly get confused, repeat the topic keyword multiple times
+    // to increase its weight in the embedding (e.g., "homologación" vs "permiso de trabajo")
+    const needsExtraEmphasis = [
+      'homologación', 'convalidación', 'reconocimiento de título',
+      'arraigo social', 'arraigo laboral', 'arraigo familiar'
+    ];
+    
+    const needsEmphasis = needsExtraEmphasis.some(t => mainTopic.includes(t));
+    
+    if (needsEmphasis) {
+      // Repeat topic 2 times to strengthen its presence in the embedding
+      return `${mainTopic} ${mainTopic} ${topicContext} - ${question}`;
+    }
+    
     return `${mainTopic} ${topicContext} - ${question}`;
   }
   
