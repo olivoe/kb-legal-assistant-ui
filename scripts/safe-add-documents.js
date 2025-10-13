@@ -307,7 +307,7 @@ async function verifyResults() {
   logStep(6, 'Verifying Results');
   
   // Check embeddings count
-  const embeddingsPath = path.join(PROJECT_ROOT, 'data/kb/embeddings.json');
+  const embeddingsPath = path.join(PROJECT_ROOT, 'public/kb-text/embeddings.json');
   
   if (await fileExists(embeddingsPath)) {
     const embData = JSON.parse(await fs.readFile(embeddingsPath, 'utf-8'));
@@ -318,7 +318,7 @@ async function verifyResults() {
   }
   
   // Check kb_index
-  const indexPath = path.join(PROJECT_ROOT, 'data/kb/kb_index.json');
+  const indexPath = path.join(PROJECT_ROOT, 'public/kb-text/kb_index.json');
   
   if (await fileExists(indexPath)) {
     const indexData = JSON.parse(await fs.readFile(indexPath, 'utf-8'));

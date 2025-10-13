@@ -17,7 +17,7 @@ const CONFIG = {
   GITHUB_REPO: process.env.GITHUB_REPO || process.env.KB_REPO_NAME,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || process.env.KB_REPO_TOKEN,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-  OUTPUT_DIR: path.join(process.cwd(), 'data', 'kb'),
+  OUTPUT_DIR: path.join(process.cwd(), 'public', 'kb-text'),
   EMBEDDING_MODEL: process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-small',
   CHUNK_SIZE: 1000,
   CHUNK_OVERLAP: 200
@@ -386,24 +386,12 @@ class KBPipeline {
       JSON.stringify(embeddingsData, null, 2)
     );
 
-    // Copy to public directory for client access
-    await fs.writeFile(
-      path.join(process.cwd(), 'public', 'embeddings.json'),
-      JSON.stringify(embeddingsData, null, 2)
-    );
-
     // Save document index (extract from embeddings to ensure consistency)
     const documentIndex = Array.from(new Set(this.embeddings.map(emb => emb.file))).sort();
     
-    // Save to data/kb/
+    // Save KB index
     await fs.writeFile(
       path.join(CONFIG.OUTPUT_DIR, 'kb_index.json'),
-      JSON.stringify(documentIndex, null, 2)
-    );
-    
-    // Save to public/ for client access
-    await fs.writeFile(
-      path.join(process.cwd(), 'public', 'kb_index.json'),
       JSON.stringify(documentIndex, null, 2)
     );
 

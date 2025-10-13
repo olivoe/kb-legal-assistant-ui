@@ -24,7 +24,7 @@ export async function loadKB(): Promise<EmbeddingsPayload> {
   if (cache) return cache;
 
   const root = process.cwd();
-  const embPath = path.join(root, 'data', 'kb', 'embeddings.json');
+  const embPath = path.join(root, 'public', 'kb-text', 'embeddings.json');
 
   const raw = await fs.readFile(embPath, 'utf8');
   const parsed = JSON.parse(raw) as EmbeddingsPayload;
