@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     // Read from kb_index.json which contains ALL documents
-    const indexPath = path.join(process.cwd(), "public", "kb_index.json");
+    const indexPath = path.join(process.cwd(), "public", "kb-text", "kb_index.json");
     const indexContent = await fs.readFile(indexPath, "utf-8");
     const documents = JSON.parse(indexContent);
     

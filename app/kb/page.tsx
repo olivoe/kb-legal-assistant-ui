@@ -39,7 +39,7 @@ export default function KnowledgeBasePage() {
 
           // Fetch embeddings to get total chunk count
           try {
-            const embRes = await fetch(`/embeddings.json?ts=${Date.now()}`, { cache: 'no-store', headers: { 'cache-control': 'no-store' } });
+            const embRes = await fetch(`/kb-text/embeddings.json?ts=${Date.now()}`, { cache: 'no-store', headers: { 'cache-control': 'no-store' } });
             if (embRes.ok) {
               const embData = await embRes.json();
               // Show total embedding chunks, not unique files
