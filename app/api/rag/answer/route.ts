@@ -77,6 +77,11 @@ function isInSpanishImmigrationDomainStrict(
     "modelo ex", "arraigo", "reagrupacion", "reagrupación",
     "tarjeta comunitaria", "regimen comunitario", "régimen comunitario",
     
+    // Spanish nationality laws
+    "ley de memoria", "memoria democratica", "memoria democrática",
+    "ley de nietos", "nietos", "bisnietos",
+    "ley de memoria historica", "memoria histórica", "memoria historica",
+    
     // Countries (likely asking about immigration TO Spain FROM these)
     "venezuela", "colombia", "ecuador", "peru", "argentina", "mexico", "bolivia",
     "chile", "uruguay", "paraguay", "cuba", "nicaragua", "honduras",
@@ -221,7 +226,7 @@ function expandFollowUpQuery(question: string, conversationHistory: Array<{role:
     'renovación TIE', 'renovación de tarjeta', 'renovación',
     'nacionalidad española', 'nacionalidad por residencia', 'nacionalidad por opción', 'nacionalidad',
     'reagrupación familiar', 'familiar comunitario', 'residencia comunitaria',
-    'Ley de Memoria', 'Ley de Nietos',
+    'Ley de Memoria Democrática', 'Ley de Memoria', 'memoria democrática', 'Ley de Nietos', 'nietos',
     'autorización de residencia para emprendedores', 'emprendedores',
     'visado de estudiante', 'visado',
     'permiso de trabajo', 'autorización de residencia', 'TIE', 'tarjeta'
@@ -237,7 +242,8 @@ function expandFollowUpQuery(question: string, conversationHistory: Array<{role:
     // to increase its weight in the embedding (e.g., "homologación" vs "permiso de trabajo")
     const needsExtraEmphasis = [
       'homologación', 'convalidación', 'reconocimiento de título',
-      'arraigo social', 'arraigo laboral', 'arraigo familiar'
+      'arraigo social', 'arraigo laboral', 'arraigo familiar',
+      'Ley de Memoria', 'memoria democrática', 'Ley de Nietos'
     ];
     
     const needsEmphasis = needsExtraEmphasis.some(t => mainTopic.includes(t));
