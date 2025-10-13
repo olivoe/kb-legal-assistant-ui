@@ -82,6 +82,11 @@ function isInSpanishImmigrationDomainStrict(
     "ley de nietos", "nietos", "bisnietos",
     "ley de memoria historica", "memoria histórica", "memoria historica",
     
+    // Law firm and services
+    "olivo galarza", "abogado", "abogados", "despacho", "bufete",
+    "honorarios", "asesoria", "asesoría", "asesorías", "consulta",
+    "cobrar", "cobran", "costo", "costos", "servicios", "contratar",
+    
     // Countries (likely asking about immigration TO Spain FROM these)
     "venezuela", "colombia", "ecuador", "peru", "argentina", "mexico", "bolivia",
     "chile", "uruguay", "paraguay", "cuba", "nicaragua", "honduras",
@@ -229,7 +234,8 @@ function expandFollowUpQuery(question: string, conversationHistory: Array<{role:
     'Ley de Memoria Democrática', 'Ley de Memoria', 'memoria democrática', 'Ley de Nietos', 'nietos',
     'autorización de residencia para emprendedores', 'emprendedores',
     'visado de estudiante', 'visado',
-    'permiso de trabajo', 'autorización de residencia', 'TIE', 'tarjeta'
+    'permiso de trabajo', 'autorización de residencia', 'TIE', 'tarjeta',
+    'Olivo Galarza', 'honorarios', 'precio', 'asesoría', 'servicios'
   ];
   
   // Find the most specific topic mentioned in the conversation
