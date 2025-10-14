@@ -90,11 +90,11 @@ export async function GET(req: NextRequest) {
     // Check file ages
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    const sevenDaysMs = 7 * oneDayMs;
+    const ninetyDaysMs = 90 * oneDayMs;
 
     if (embeddingsStats) {
       const embeddingsAge = now - embeddingsStats.mtimeMs;
-      if (embeddingsAge > sevenDaysMs) {
+      if (embeddingsAge > ninetyDaysMs) {
         issues.push(`Embeddings not updated in ${Math.floor(embeddingsAge / oneDayMs)} days`);
         if (status === "healthy") status = "degraded";
       }
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
 
     if (indexStats) {
       const indexAge = now - indexStats.mtimeMs;
-      if (indexAge > sevenDaysMs) {
+      if (indexAge > ninetyDaysMs) {
         issues.push(`Index not updated in ${Math.floor(indexAge / oneDayMs)} days`);
         if (status === "healthy") status = "degraded";
       }
