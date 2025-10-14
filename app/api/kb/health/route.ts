@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     let status: "healthy" | "degraded" | "unhealthy" = "healthy";
 
     // Read embeddings.json
-    const embeddingsPath = path.join(process.cwd(), "public", "embeddings.json");
+    const embeddingsPath = path.join(process.cwd(), "public", "kb-text", "embeddings.json");
     let embeddingsData: any = null;
     let embeddingsStats: any = null;
     
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Read kb_index.json
-    const indexPath = path.join(process.cwd(), "public", "kb_index.json");
+    const indexPath = path.join(process.cwd(), "public", "kb-text", "kb_index.json");
     let indexData: any = null;
     let indexStats: any = null;
     
