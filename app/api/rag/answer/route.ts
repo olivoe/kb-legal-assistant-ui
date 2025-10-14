@@ -340,6 +340,38 @@ export async function POST(req: NextRequest) {
       })
     );
 
+    // If price intent but no snippet mentions pricing, inject deterministic FAQ snippet
+    if (/\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/i.test(question)) {
+      const hasPriceSnippet = kbEnriched.some(e => /precio|honorarios|costo|tarifa/i.test(e.snippet || ""));
+      if (!hasPriceSnippet) {
+        try {
+          const file = 'Sobre Olivo Galarza Abogados/informacion general Olivo Galarza Abogados.txt';
+          const base = origin;
+          const url = `${base}/kb-text/kb-legal-documents/${encodeURI(file)}`;
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const fullText = await res.text();
+            const words = fullText.split(/\s+/);
+            const idx = words.findIndex(w => /precio|honorarios|costo|tarifa/i.test(w));
+            if (idx >= 0) {
+              const start = Math.max(0, idx - 40);
+              const end = Math.min(words.length, idx + 160);
+              const meta = { file: file.replace(/\.txt$/i, '.pdf'), start, end };
+              const metaInfo = await loadSnippetFromMeta(meta as any, base);
+              kbEnriched.unshift({
+                id: `inject#olivo-pricing`,
+                score: (topScore || 0) + 0.05,
+                meta,
+                snippet: metaInfo.snippet,
+                relPath: metaInfo.relPath ?? null,
+                url: null,
+              });
+            }
+          }
+        } catch {}
+      }
+    }
+
     // 4) Optional web fallback (only when kbOnly=false and confidence is weak OR volatile topic)
     //    Heuristic: no KB hits OR topScore below 0.70 (stricter threshold for better quality)
     const isVolatile = /tasas|formularios|convocatoria|convocatorias|actualizada|vigente|última|ultima/i.test(question);
