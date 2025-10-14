@@ -254,7 +254,11 @@ export async function POST(req: NextRequest) {
     
     // Expand vague follow-up questions with conversation context, then apply Spanish rewriting
     const expandedQuery = expandFollowUpQuery(question, conversationHistory);
-    const rewrittenQ = rewriteEs(expandedQuery);
+    let rewrittenQ = rewriteEs(expandedQuery);
+    // If user asks about prices/fees, add a targeted booster to improve retrieval of firm FAQ
+    if (/\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/i.test(expandedQuery)) {
+      rewrittenQ += "; Olivo Galarza Abogados; preguntas frecuentes; precio honorarios asesoría servicios";
+    }
 
     if (!process.env.OPENAI_API_KEY) {
       return new Response(sse(JSON.stringify({ ok: false, error: "Missing OPENAI_API_KEY" })), {

@@ -291,7 +291,11 @@ export async function POST(req: NextRequest) {
     const { dim } = await loadKB(origin);
 
     // Expand vague follow-up questions with conversation context
-    const expandedQuery = expandFollowUpQuery(question, conversationHistory);
+    let expandedQuery = expandFollowUpQuery(question, conversationHistory);
+    // Price/fees intent booster to bias retrieval toward firm FAQ
+    if (/\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/i.test(expandedQuery)) {
+      expandedQuery += "; Olivo Galarza Abogados; preguntas frecuentes; precio honorarios asesoría servicios";
+    }
     const qVec = await embedText(expandedQuery);
     if (!Array.isArray(qVec) || qVec.length !== dim) {
       return new Response(

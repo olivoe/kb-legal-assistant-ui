@@ -70,6 +70,9 @@ export function rewriteEs(q: string): string {
     
     // Fees and procedures
     [/\btasas? (modelo 790|tasa 052)\b/, "tasa modelo 790 código 052 extranjería"],
+    // Law firm prices / fees synonyms → align to document wording
+    [/\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/, "precio honorarios asesoría servicios"],
+    [/\bolivo(\s+galarza)?\b/, "Olivo Galarza Abogados"],
     [/\b(cita previa|pedir cita)\b/, "cita previa extranjería oficina"],
     [/\bhuellas? (dactilares?|digitales?)\b/, "toma huellas TIE extranjería"],
     
@@ -100,6 +103,13 @@ export function rewriteEs(q: string): string {
   if (/\b(nie|tie)\b/.test(n)) anchors.push("número identidad extranjero", "tarjeta identidad extranjero");
   if (/\breagrupacion\b/.test(n)) anchors.push("reagrupación familiar", "requisitos reagrupación");
   
+  if (anchors.length) rewritten += `; ${anchors.join("; ")}`;
+
+  // Price intent + brand emphasis anchors to improve recall for firm FAQ
+  const hasPrice = /\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/.test(n);
+  const mentionsFirm = /\bolivo(\s+galarza)?\b/.test(n);
+  if (hasPrice) anchors.push("precio honorarios asesoría servicios");
+  if (mentionsFirm || hasPrice) anchors.push("Olivo Galarza Abogados", "preguntas frecuentes", "asesoría");
   if (anchors.length) rewritten += `; ${anchors.join("; ")}`;
 
   return rewritten;
