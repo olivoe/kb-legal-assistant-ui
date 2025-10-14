@@ -92,7 +92,17 @@ export async function GET(req: NextRequest) {
     const oneDayMs = 24 * 60 * 60 * 1000;
     const ninetyDaysMs = 90 * oneDayMs;
 
-    if (embeddingsStats) {
+    if (embeddingsData?.builtAt) {
+      const builtAtMs = Date.parse(embeddingsData.builtAt);
+      if (!Number.isNaN(builtAtMs)) {
+        const embeddingsAge = now - builtAtMs;
+        if (embeddingsAge > ninetyDaysMs) {
+          issues.push(`Embeddings not updated in ${Math.floor(embeddingsAge / oneDayMs)} days`);
+          if (status === "healthy") status = "degraded";
+        }
+      }
+    } else if (embeddingsStats) {
+      // Fallback to file mtime if builtAt is missing
       const embeddingsAge = now - embeddingsStats.mtimeMs;
       if (embeddingsAge > ninetyDaysMs) {
         issues.push(`Embeddings not updated in ${Math.floor(embeddingsAge / oneDayMs)} days`);
@@ -100,7 +110,17 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (indexStats) {
+    if (embeddingsData?.builtAt) {
+      const builtAtMs = Date.parse(embeddingsData.builtAt);
+      if (!Number.isNaN(builtAtMs)) {
+        const indexAge = now - builtAtMs;
+        if (indexAge > ninetyDaysMs) {
+          issues.push(`Index not updated in ${Math.floor(indexAge / oneDayMs)} days`);
+          if (status === "healthy") status = "degraded";
+        }
+      }
+    } else if (indexStats) {
+      // Fallback to file mtime if builtAt is missing
       const indexAge = now - indexStats.mtimeMs;
       if (indexAge > ninetyDaysMs) {
         issues.push(`Index not updated in ${Math.floor(indexAge / oneDayMs)} days`);

@@ -378,7 +378,8 @@ class KBPipeline {
     const embeddingsData = {
       model: CONFIG.EMBEDDING_MODEL,
       dims: this.embeddings[0]?.embedding?.length || 0,
-      items: this.embeddings
+      items: this.embeddings,
+      builtAt: new Date().toISOString()
     };
 
     await fs.writeFile(
