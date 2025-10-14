@@ -309,7 +309,17 @@ export async function POST(req: NextRequest) {
 
     // 2) KB search + domain routing
     const inDomain = isInSpanishImmigrationDomainStrict(question, question, conversationHistory);
-    const hits = await searchKB(qVec, { k: topK, minScore });
+    const priceIntent = /\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/i.test(expandedQuery);
+    const hits = await searchKB(qVec, {
+      k: topK,
+      minScore,
+      boostIfFileIncludes: priceIntent
+        ? [
+            { substr: 'Sobre Olivo Galarza Abogados', weight: 0.08 },
+            { substr: 'informacion general Olivo Galarza Abogados', weight: 0.08 },
+          ]
+        : [],
+    });
     const topScore = hits[0]?.score ?? 0;
 
     // 3) Enrich KB hits with snippets/relPath

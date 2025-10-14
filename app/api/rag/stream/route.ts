@@ -292,7 +292,17 @@ export async function POST(req: NextRequest) {
     }> = [];
 
     if (Array.isArray(qVec) && qVec.length === dim) {
-      hits = await searchKB(qVec, { k: topK, minScore });
+      const priceIntent = /\b(precio|precios|cuesta|coste|costo|tarifa|tarifas|honorarios|cobran|cobro|cobrar)\b/i.test(rewrittenQ);
+      hits = await searchKB(qVec, {
+        k: topK,
+        minScore,
+        boostIfFileIncludes: priceIntent
+          ? [
+              { substr: 'Sobre Olivo Galarza Abogados', weight: 0.08 },
+              { substr: 'informacion general Olivo Galarza Abogados', weight: 0.08 },
+            ]
+          : [],
+      });
     }
 
     const topScores = (hits ?? []).map(h => h?.score ?? 0).slice(0, 5);
