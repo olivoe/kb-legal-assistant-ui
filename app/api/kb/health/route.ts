@@ -134,12 +134,12 @@ export async function GET(req: NextRequest) {
       timestamp: new Date().toISOString(),
       embeddings: {
         total: embeddingsData?.items?.length || 0,
-        lastUpdated: embeddingsStats ? new Date(embeddingsStats.mtime).toISOString() : null,
+        lastUpdated: embeddingsData?.builtAt || (embeddingsStats ? new Date(embeddingsStats.mtime).toISOString() : null),
         fileSizeKB: embeddingsStats ? Math.round(embeddingsStats.size / 1024) : 0,
       },
       index: {
         total: totalDocs,
-        lastUpdated: indexStats ? new Date(indexStats.mtime).toISOString() : null,
+        lastUpdated: embeddingsData?.builtAt || (indexStats ? new Date(indexStats.mtime).toISOString() : null),
         fileSizeKB: indexStats ? Math.round(indexStats.size / 1024) : 0,
       },
       coverage: {
