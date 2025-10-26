@@ -38,35 +38,42 @@ export default function Home() {
             maxWidth: 1152, // 6xl equivalent
             margin: '0 auto',
             padding: '24px 32px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
           }}
         >
-          <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#111827' }}>KB Chat UI</h1>
-            <div style={{ marginTop: 8, color: '#6b7280', fontSize: 14 }}>
-              API base: <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 4 }}>{API_BASE || '(no NEXT_PUBLIC_API_BASE)'}</code> ·
-              <span style={{ marginLeft: 8 }}>BUILD: <code style={{ backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: 4 }}>{BUILD_TAG}</code></span>
-            </div>
-            <div style={{ marginTop: 8, color: '#6b7280', fontSize: 14 }}>
-              Sugerencias: prueba "Requisitos arraigo social", "TIE estudiante renovación", "tasas estudiante España 2025 BOE".
-            </div>
-            <div style={{ marginTop: 6 }}>
-              <a 
-                href="/kb" 
-                style={{ 
-                  color: '#2563eb', 
-                  textDecoration: 'none', 
-                  fontSize: 14,
-                  fontWeight: 500
-                }}
-              >
-                📚 Ver Base de Conocimiento ({new Date().getFullYear()})
-              </a>
-            </div>
+          {/* Logo */}
+          <div style={{ marginBottom: 16 }}>
+            <img 
+              src="/olivo-galarza-logo.png" 
+              alt="Olivo Galarza Abogados" 
+              style={{ height: 60, width: 'auto' }}
+            />
           </div>
-          <Ping />
+          
+          {/* Beta Disclaimer */}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ 
+              display: 'inline-block',
+              backgroundColor: '#f3f4f6', 
+              padding: '2px 8px', 
+              borderRadius: 4,
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#111827',
+              marginBottom: 8
+            }}>
+              Beta
+            </div>
+            <p style={{ 
+              margin: 0, 
+              fontSize: 14, 
+              color: '#6b7280',
+              lineHeight: '1.5'
+            }}>
+              Esta Inteligencia Artifical se ofrece como ayuda para la consulta de temas relacionados con la inmigración y estadía en España.
+              <br />
+              Como toda IA, podría cometer errores.
+            </p>
+          </div>
         </div>
       </header>
 
@@ -367,48 +374,6 @@ function TypingIndicator() {
   );
 }
 
-function Ping() {
-  const [res, setRes] = useState<string>('');
-  const [loading, setLoading] = useState(false);
-  async function pingApi() {
-    try {
-      setLoading(true);
-      const r = await fetch(`${API_BASE}/api/chat`, { method: 'GET' });
-      const t = await r.text();
-      setRes(t);
-    } catch (e: any) {
-      setRes(e?.message || 'Ping falló');
-    } finally {
-      setLoading(false);
-    }
-  }
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <button
-        onClick={pingApi}
-        disabled={loading}
-        style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', fontSize: 14, fontFamily: 'system-ui, -apple-system, sans-serif' }}
-      >
-        {loading ? 'Pinging…' : 'Ping /api/chat'}
-      </button>
-      {res && (
-        <span
-          style={{
-            color: '#6b7280',
-            fontSize: 14,
-            maxWidth: 260,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-          }}
-        >
-          {res}
-        </span>
-      )}
-    </div>
-  );
-}
 
 function nanoid(size = 12) {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
