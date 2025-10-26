@@ -42,11 +42,13 @@ export default function Home() {
         >
           {/* Logo */}
           <div style={{ marginBottom: 16 }}>
-            <img 
-              src="/olivo-galarza-logo.png" 
-              alt="Olivo Galarza Abogados" 
-              style={{ height: 60, width: 'auto' }}
-            />
+            <a href="https://www.olivogalarza.com" target="_blank" rel="noopener noreferrer">
+              <img 
+                src="/olivo-galarza-logo.png" 
+                alt="Olivo Galarza Abogados" 
+                style={{ height: 60, width: 'auto', cursor: 'pointer' }}
+              />
+            </a>
           </div>
           
           {/* Beta Disclaimer */}
@@ -153,7 +155,7 @@ function ChatShell({ apiBase, stream = true }: { apiBase: string; stream?: boole
       >
         {messages.length === 0 && (
           <div style={{ margin: '64px auto 0', maxWidth: 600, textAlign: 'center', color: '#6b7280' }}>
-            <p style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>Ask me about Spanish immigration law, or anything else.</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>Ask me about Spanish immigration law.</p>
             <p style={{ marginTop: 8, fontSize: 14 }}>Shift+Enter for newline • Cmd/Ctrl+Enter to send</p>
           </div>
         )}
