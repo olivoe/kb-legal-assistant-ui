@@ -40,15 +40,23 @@ export default function Home() {
             padding: '24px 32px',
           }}
         >
-          {/* Logo */}
-          <div style={{ marginBottom: 16 }}>
+          {/* Logos - Left and Right */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            {/* Olivo Galarza Logo - Left */}
             <a href="https://www.olivogalarza.com" target="_blank" rel="noopener noreferrer">
               <img 
                 src="/olivo-galarza-logo.png" 
                 alt="Olivo Galarza Abogados" 
-                style={{ height: 60, width: 'auto', cursor: 'pointer' }}
+                style={{ height: 80, width: 'auto', cursor: 'pointer' }}
               />
             </a>
+            
+            {/* AInhoa Logo - Right */}
+            <img 
+              src="/AInhoa logo.png" 
+              alt="AInhoa AI Assistant" 
+              style={{ height: 60, width: 'auto' }}
+            />
           </div>
           
           {/* Beta Disclaimer */}
@@ -346,23 +354,55 @@ async function callNonStream(apiBase: string, question: string): Promise<string>
 function Bubble({ role, content }: { role: Role; content: string }) {
   const isUser = role === 'user';
   return (
-    <div style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
-      <div
-        style={{
-          maxWidth: '86%',
-          borderRadius: 12,
-          padding: '12px 16px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: isUser ? '0' : '1px solid #e5e7eb',
-          background: isUser ? '#111827' : '#fff',
-          color: isUser ? '#fff' : '#111827',
-          whiteSpace: 'pre-wrap',
-          fontSize: 16,
-          lineHeight: '24px',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}
-      >
-        {content || '\u00a0'}
+    <div style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', gap: 12, alignItems: 'flex-start' }}>
+      {/* Avatar for AInhoa (assistant) - show on left */}
+      {!isUser && (
+        <div style={{ flexShrink: 0 }}>
+          <img 
+            src="/ainhoa icoloring-o59q.png" 
+            alt="AInhoa"
+            style={{ 
+              width: 40, 
+              height: 40, 
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid #e5e7eb'
+            }}
+          />
+        </div>
+      )}
+      
+      {/* Message bubble */}
+      <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '80%' }}>
+        {/* Name label for AInhoa */}
+        {!isUser && (
+          <div style={{ 
+            fontSize: 12, 
+            fontWeight: 600, 
+            color: '#6b7280',
+            marginBottom: 4,
+            paddingLeft: 4
+          }}>
+            AInhoa
+          </div>
+        )}
+        
+        <div
+          style={{
+            borderRadius: 12,
+            padding: '12px 16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            border: isUser ? '0' : '1px solid #e5e7eb',
+            background: isUser ? '#111827' : '#fff',
+            color: isUser ? '#fff' : '#111827',
+            whiteSpace: 'pre-wrap',
+            fontSize: 16,
+            lineHeight: '24px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}
+        >
+          {content || '\u00a0'}
+        </div>
       </div>
     </div>
   );
@@ -370,8 +410,42 @@ function Bubble({ role, content }: { role: Role; content: string }) {
 
 function TypingIndicator() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#6b7280', fontSize: 14 }}>
-      <span>assistant is typing…</span>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      {/* AInhoa avatar */}
+      <div style={{ flexShrink: 0 }}>
+        <img 
+          src="/ainhoa icoloring-o59q.png" 
+          alt="AInhoa"
+          style={{ 
+            width: 40, 
+            height: 40, 
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '2px solid #e5e7eb'
+          }}
+        />
+      </div>
+      
+      {/* Typing text */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ 
+          fontSize: 12, 
+          fontWeight: 600, 
+          color: '#6b7280',
+          marginBottom: 4,
+          paddingLeft: 4
+        }}>
+          AInhoa
+        </div>
+        <div style={{ 
+          color: '#6b7280', 
+          fontSize: 14,
+          fontStyle: 'italic',
+          paddingLeft: 4
+        }}>
+          está escribiendo…
+        </div>
+      </div>
     </div>
   );
 }
